@@ -1,5 +1,12 @@
 import sys
+import json
+from argparse import ArgumentParser
 
-def main(argv=sys.argv):
-    print(argv)
-    return 0
+from pyspeedinsights.core.api import API
+
+def main():
+    url = sys.argv[1]
+    api = API(url)
+    result = api.get()
+    formatted_result = json.dumps(result, indent=4)
+    print(formatted_result)

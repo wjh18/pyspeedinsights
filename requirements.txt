@@ -17,6 +17,7 @@ py==1.11.0
 Pygments==2.12.0
 pyparsing==3.0.9
 pytest==7.1.2
+python-dotenv==0.20.0
 readme-renderer==35.0
 requests==2.27.1
 requests-toolbelt==0.9.1
