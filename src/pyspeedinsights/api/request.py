@@ -13,5 +13,5 @@ def get_response(url, category=None, locale=None, strategy=None,
     base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     params['key'] = settings.PSI_API_KEY
     resp = requests.get(base_url, params=params)
-    # print(resp.url)
+    
     return resp
