@@ -9,3 +9,6 @@ __pycache__/
 
 # Environments
 .env
+
+# Native to package
+psi.json
