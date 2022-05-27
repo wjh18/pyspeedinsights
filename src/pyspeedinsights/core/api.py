@@ -1,5 +1,4 @@
 import requests
-import json
 
 from ..conf import settings
 

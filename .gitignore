@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 /dist/
 /*.egg-info
+.venv
 
 # Mac/OSX
 .DS_Store
