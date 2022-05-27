@@ -1,5 +1,8 @@
 # Python
 __pycache__/
+*.pyc
+/dist/
+/*.egg-info
 
 # Mac/OSX
 .DS_Store
