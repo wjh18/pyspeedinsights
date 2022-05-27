@@ -1,5 +1,5 @@
 from pyspeedinsights.core.parser import parse_args
-from pyspeedinsights.core.api import API
+from pyspeedinsights.core.api import get_response
 from pyspeedinsights.core.process import Process
 
 
@@ -14,8 +14,7 @@ def main():
     proc_args_dict = {k: v for k, v in proc_args_dict.items() if v is not None}
     
     # Construct URL from cmd args and make API call
-    api = API(**api_args_dict)
-    response = api.get_data()
+    response = get_response(**api_args_dict)
     
     # Process the response based on cmd args
     process = Process(response, **proc_args_dict)
