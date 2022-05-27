@@ -1,3 +1,4 @@
+attrs==21.4.0
 bleach==5.0.0
 build==0.8.0
 certifi==2022.5.18.1
@@ -6,12 +7,16 @@ commonmark==0.9.1
 docutils==0.18.1
 idna==3.3
 importlib-metadata==4.11.4
+iniconfig==1.1.1
 keyring==23.5.1
 packaging==21.3
 pep517==0.12.0
 pkginfo==1.8.2
+pluggy==1.0.0
+py==1.11.0
 Pygments==2.12.0
 pyparsing==3.0.9
+pytest==7.1.2
 readme-renderer==35.0
 requests==2.27.1
 requests-toolbelt==0.9.1
