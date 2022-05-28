@@ -1,6 +1,9 @@
+from pprint import pprint
+
 from pyspeedinsights.core.commands import parse_args
 from pyspeedinsights.api.request import get_response
 from pyspeedinsights.api.response import ResponseHandler
+from pyspeedinsights.core.excel import ExcelWorkbook
 
 
 def main():
@@ -21,5 +24,12 @@ def main():
     r_handler.execute()
     
     # Print the results (temporary verification)
-    print(r_handler.audit_results)
-    print(r_handler.metrics_results)
+    pprint(r_handler.audit_results)
+    pprint(r_handler.metrics_results)
+    audit_results = r_handler.audit_results
+    metrics_results = r_handler.metrics_results
+    
+    # Create worksheet and write results to it
+    workbook = ExcelWorkbook(audit_results, metrics_results)
+    workbook.setup_worksheet()
+    workbook.write_to_worksheet()
