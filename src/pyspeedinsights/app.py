@@ -19,4 +19,7 @@ def main():
     # Process the response based on cmd args
     r_handler = ResponseHandler(response, **proc_args_dict)
     r_handler.execute()
-    print(r_handler.results)
+    
+    # Print the results (temporary verification)
+    print(r_handler.audit_results)
+    print(r_handler.metrics_results)

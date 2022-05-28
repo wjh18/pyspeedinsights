@@ -1,5 +1,7 @@
 import argparse
 
+from ..conf.data import metrics_choices
+
 
 def parse_args():
     """
@@ -36,9 +38,13 @@ def parse_args():
     # Add other argument options for how to process the API response
     proc_group = parser.add_argument_group('Processing Group')
     proc_group.add_argument(
-        "-f", "--format", metavar="\b", dest="format", 
+        "-f", "--format", metavar="\b", dest="format",
         choices=['json', 'excel'],
         help="'json' for a one-page report in json format. 'excel' for a full report using a sitemap URL.")
+    proc_group.add_argument(
+        "-m", "--metrics", metavar="\b", dest="metrics",
+        choices=metrics_choices, nargs="+"
+    )
     
     args = parser.parse_args()
     
