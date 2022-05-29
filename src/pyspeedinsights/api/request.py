@@ -15,8 +15,8 @@ def get_response(url, category=None, locale=None, strategy=None,
     if settings.PSI_API_KEY is not None:
         params['key'] = settings.PSI_API_KEY
     else:
-        raise TypeError("""Your PageSpeed Insights API key is empty. 
-                        Please generate and save a key, then try again.""")
+        err = "Your PageSpeed Insights API key is empty. Please generate and save a key, then try again."
+        raise TypeError(err)
     
     resp = requests.get(base_url, params=params)
     

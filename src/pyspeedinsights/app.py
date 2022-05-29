@@ -27,7 +27,7 @@ def main():
     pprint(r_handler.audit_results)
     pprint(r_handler.metrics_results)
     
-    if proc_args_dict['results'] == 'excel':
+    if proc_args_dict.get('results') == 'excel':
         audit_results = r_handler.audit_results
         metrics_results = r_handler.metrics_results
         
