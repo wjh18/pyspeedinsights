@@ -30,6 +30,7 @@ def main():
     metrics_results = r_handler.metrics_results
     
     # Create worksheet and write results to it
-    workbook = ExcelWorkbook(audit_results, metrics_results)
+    url = api_args_dict['url']
+    workbook = ExcelWorkbook(url, audit_results, metrics_results)
     workbook.setup_worksheet()
     workbook.write_to_worksheet()

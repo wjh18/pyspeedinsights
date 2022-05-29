@@ -3,7 +3,8 @@ import xlsxwriter
 
 class ExcelWorkbook:
     
-    def __init__(self, audit_results, metrics_results=None):
+    def __init__(self, url, audit_results, metrics_results=None):
+        self.url = url
         self.audit_results = audit_results
         self.metrics_results = metrics_results
         self.workbook = None
@@ -17,7 +18,6 @@ class ExcelWorkbook:
         
         column_format = self._column_format()
         data_format = self._data_format()
-        last_key = list(results.keys())[-1]
         for k, v in results.items():
             self.worksheet.set_column(col, col + 1, 15)
             
@@ -30,7 +30,7 @@ class ExcelWorkbook:
                 self.worksheet.write(row + 1, col + 1, 'Value', column_format)
                 self.worksheet.write(row + 2, col, score, data_format)                
                 self.worksheet.write(row + 2, col + 1, value, data_format)
-                if k == last_key:
+                if k == list(results.keys())[-1]:
                     col += 3
                 else:
                     col += 2
@@ -72,7 +72,7 @@ class ExcelWorkbook:
         
         self.worksheet.set_column(col, col + 1, 15)
         self.worksheet.merge_range(row, col, row, col + 4, 'URL', column_format)
-        self.worksheet.merge_range(row + 2, col, row + 2, col + 4, 'https://www.example.com', url_format)
+        self.worksheet.merge_range(row + 2, col, row + 2, col + 4, self.url, url_format)
         
         self.cur_cell = [0, 4]        
         
