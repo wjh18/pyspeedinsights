@@ -26,11 +26,13 @@ def main():
     # Print the results (temporary verification)
     pprint(r_handler.audit_results)
     pprint(r_handler.metrics_results)
-    audit_results = r_handler.audit_results
-    metrics_results = r_handler.metrics_results
     
-    # Create worksheet and write results to it
-    url = api_args_dict['url']
-    workbook = ExcelWorkbook(url, audit_results, metrics_results)
-    workbook.setup_worksheet()
-    workbook.write_to_worksheet()
+    if proc_args_dict['results'] == 'excel':
+        audit_results = r_handler.audit_results
+        metrics_results = r_handler.metrics_results
+        
+        # Create worksheet and write results to it
+        url = api_args_dict['url']
+        workbook = ExcelWorkbook(url, audit_results, metrics_results)
+        workbook.setup_worksheet()
+        workbook.write_to_worksheet()

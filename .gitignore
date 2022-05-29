@@ -2,7 +2,7 @@
 __pycache__/
 *.pyc
 /dist/
-/*.egg-info
+src/*.egg-info
 .venv
 
 # Mac/OSX
