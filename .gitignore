@@ -4,6 +4,7 @@ __pycache__/
 /dist/
 src/*.egg-info
 .venv
+.pytest_cache
 
 # Mac/OSX
 .DS_Store
@@ -11,5 +12,5 @@ src/*.egg-info
 # Environments
 .env
 
-# Native to package
+# Package specific
 psi.json
