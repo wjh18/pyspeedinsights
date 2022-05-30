@@ -4,6 +4,10 @@ A simple Python wrapper for the PageSpeed Insights API.
 
 Output results for a single URL to a `.json` file or specify a sitemap file to output your full site's Lighthouse results to an `.xlsx` workbook.
 
+## Installation
+
+`pip install pyspeedinsights`
+
 ## Authorization
 
 The PageSpeed Insights API requires you to generate an API key for anything more than simple testing. Otherwise, you'll hit a rate limit rather quickly.
@@ -14,7 +18,7 @@ For this reason, a valid API key is currently required to use this package. Plea
 
 This package uses the `keyring` Python library to store API keys securely on your system's default keystore (e.g. MacOS Keychain for MacOS users).
 
-This dependency is installed automatically when you `pip install pyspeedinsights`. If for some reason you don't have this installed, run `pip install keyring` before running any `keyring` operations.
+This dependency is installed automatically when you `pip install pyspeedinsights`. If not, run `pip install keyring` before running any `keyring` operations.
 
 Please see the [`keyring` documentation](https://github.com/jaraco/keyring#command-line-utility) for help with the following commands.
 
@@ -22,7 +26,7 @@ Please see the [`keyring` documentation](https://github.com/jaraco/keyring#comma
 
 To save your API key to your default keystore, run `keyring set system psikey`.
 
-The last argument needs to be `psikey` because that's the keyword `pyspeedinsights` looks for to read in your key during requests. `system` will instruct `keyring` to automatically detect your system's default keystore.
+The last argument needs to be `psikey` because `pyspeedinsights` looks for that username to read in your key during requests. `system` will instruct `keyring` to automatically detect your system's default keystore.
 
 You'll then receive a prompt where you can enter your key to save it.
 
@@ -59,7 +63,7 @@ Bad:
 
 ### `-f` or `--format` (optional)
 
-The format of the results (`json` or `excel`). Defaults to `json`.
+The format of the results. Specify `json` (default) or `excel`.
 
 Example:
 
@@ -67,11 +71,16 @@ Example:
 
 ### `-m` or `--metrics` (optional)
 
-Specify which metrics (other than the defaults) you want to include in your report (Excel only). If none are specified, all metrics will be included.
+Specify which metric(s) you want to include in your report. This only works for Excel because the json output will include everything.
+
+If excluded, additional metrics will not be dumped to Excel. Add the `all` argument to retrieve all available metrics.
 
 Example:
 
-* `psi https://example.com -f excel -m speedIndex`
+* `psi https://example.com -f excel -m all` - no additional metrics
+* `psi https://example.com -f excel -m all` - all available metrics
+* `psi https://example.com -f excel -m speedIndex` - just speedIndex
+* `psi https://example.com -f excel -m speedIndex totalBlockingTime` - just speedIndex and totalBlockingTime
 
 ### Other commands
 

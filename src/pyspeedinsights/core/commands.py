@@ -1,6 +1,6 @@
 import argparse
 
-from ..conf.data import metrics_choices
+from ..conf.data import COMMAND_CHOICES, metrics_choices
 
 
 def parse_args():
@@ -15,15 +15,15 @@ def parse_args():
         "url", help="The URL of the site you want to analyze.")
     api_group.add_argument(
         "-c", "--category", metavar="\b", dest="category",
-        choices=['accessibility', 'best-practices', 'performance', 'pwa', 'seo'],
+        choices=COMMAND_CHOICES['category'],
         help="The Lighthouse category to run. Defaults to Performance.")
     api_group.add_argument(
         "-l", "--locale", metavar="\b", dest="locale",
-        choices=['en', 'es'], # add more later
+        choices=COMMAND_CHOICES['locale'],
         help="The locale used to localize formatted results. Defaults to English (US).")
     api_group.add_argument(
         "-s", "--strategy", metavar="\b", dest="strategy",
-        choices=['desktop', 'mobile'],
+        choices=COMMAND_CHOICES['strategy'],
         help="The analysis strategy (desktop or mobile) to use. Defaults to desktop.")
     api_group.add_argument(
         "-uc", "--campaign", metavar="\b", dest="utm_campaign",                        
@@ -40,10 +40,14 @@ def parse_args():
     proc_group.add_argument(
         "-f", "--format", metavar="\b", dest="format",
         choices=['json', 'excel'],
-        help="'json' for a one-page report in json format. 'excel' for a full report using a sitemap URL.")
+        help="The format of the results. Specify json (default) or excel.")
     proc_group.add_argument(
         "-m", "--metrics", metavar="\b", dest="metrics",
-        choices=metrics_choices, nargs="+"
+        choices=metrics_choices, nargs="+",
+        help="Specify which metric(s) you want to include in your report.\
+            This only works for Excel because the json output will include everything.\
+            If excluded, additional metrics will not be dumped to Excel.\
+            Add the `all` argument to retrieve all available metrics."
     )
     
     args = parser.parse_args()
