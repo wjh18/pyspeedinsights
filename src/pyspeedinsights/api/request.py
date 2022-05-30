@@ -1,6 +1,5 @@
 import requests
-
-from ..conf import settings
+import keyring
     
 
 def get_response(url, category=None, locale=None, strategy=None, 
@@ -12,11 +11,14 @@ def get_response(url, category=None, locale=None, strategy=None,
     }
     base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     
-    if settings.PSI_API_KEY is not None:
-        params['key'] = settings.PSI_API_KEY
+    PSI_API_KEY = keyring.get_password("system", "psikey")
+    if PSI_API_KEY is not None:
+        params['key'] = PSI_API_KEY
     else:
-        err = "Your PageSpeed Insights API key is empty. Please generate and save a key, then try again."
-        raise TypeError(err)
+        err = "Error: Your PageSpeed Insights API key is empty.\
+              \nGenerate a key with Google and set it with the command `keyring set system psikey`.\
+              \nTo verify your key can be found, run the command `keyring get system psikey`."
+        raise SystemExit(err)
     
     try:
         resp = requests.get(base_url, params=params)
