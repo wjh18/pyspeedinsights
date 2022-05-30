@@ -1,9 +1,12 @@
+from urllib.parse import urlsplit
+
 import requests
 import keyring
     
 
 def get_response(url, category=None, locale=None, strategy=None, 
              utm_campaign=None, utm_source=None, captcha_token=None):
+    url = url_validator(url)
     params = {
         'url': url, 'category': category, 'locale': locale,
         'strategy': strategy, 'utm_campaign': utm_campaign,
@@ -33,3 +36,20 @@ def get_response(url, category=None, locale=None, strategy=None,
         raise SystemExit(err)
     
     return resp
+
+
+def url_validator(url):
+    """
+    Adds a scheme to the URL if missing.
+    Validates that the URL is fully qualified and not just a path.
+    """
+    err = "Invalid URL. Please enter a valid Fully-Qualified Domain Name (FQDN)."
+    try:
+        u = urlsplit(url)
+        if not (u.scheme and u.netloc):
+            if "." not in u.path:
+                raise SystemError(err)
+            u = u._replace(scheme='https', netloc=u.path, path='')
+        return u.geturl()
+    except:
+        raise SystemExit(err)
