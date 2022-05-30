@@ -18,6 +18,16 @@ def get_response(url, category=None, locale=None, strategy=None,
         err = "Your PageSpeed Insights API key is empty. Please generate and save a key, then try again."
         raise TypeError(err)
     
-    resp = requests.get(base_url, params=params)
+    try:
+        resp = requests.get(base_url, params=params)
+        resp.raise_for_status()
+    except requests.exceptions.HTTPError as errh:
+        raise SystemExit(errh)
+    except requests.exceptions.ConnectionError as errc:
+        raise SystemExit(errc)
+    except requests.exceptions.Timeout as errt:
+        raise SystemExit(errt)
+    except requests.exceptions.RequestException as err:
+        raise SystemExit(err)
     
     return resp
