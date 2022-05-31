@@ -22,18 +22,21 @@ class ExcelWorkbook:
         
         column_format = self._column_format()
         data_format = self._data_format()
+                
         for k, v in results.items():
             self.worksheet.set_column(col, col + 1, 15)
             
             if results == self.audit_results:
                 score = v[0]
                 value = v[1]
+                score_format = self._score_format(score)
                 
                 self.worksheet.merge_range(row, col, row, col + 1, k, column_format)
                 self.worksheet.write(row + 1, col, 'Score', column_format)
                 self.worksheet.write(row + 1, col + 1, 'Value', column_format)
-                self.worksheet.write(row + 2, col, score, data_format)                
-                self.worksheet.write(row + 2, col + 1, value, data_format)
+                self.worksheet.write(row + 2, col, score, score_format)
+                self.worksheet.write(row + 2, col + 1, value, score_format)
+                
                 if k == list(results.keys())[-1]:
                     col += 3
                 else:
@@ -71,6 +74,26 @@ class ExcelWorkbook:
             'font_size': 20,
             'bold': 1,
             'align': 'left',
+            'valign': 'vcenter'})
+        
+    def _score_format(self, score):
+        if score >= 90:
+            color = 'lime'            
+        elif 90 > score >= 80:
+            color = 'green'
+        elif 80 > score >= 70:
+            color = 'yellow'
+        elif 70 > score >= 60:
+            color = 'orange'
+        elif 60 > score >= 50:
+            color = 'brown'
+        elif 50 > score:
+            color = 'red'
+            
+        return self.workbook.add_format({
+            'bg_color': color,
+            'font_size': 14,
+            'align': 'center',
             'valign': 'vcenter'})
         
     def setup_worksheet(self):
