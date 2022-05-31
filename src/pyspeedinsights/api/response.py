@@ -5,9 +5,10 @@ from ..conf.data import COMMAND_CHOICES
 
 
 class ResponseHandler:
-    def __init__(self, response, format="json", page_limit=None,
+    def __init__(self, response, category=None, format="json", page_limit=None,
                  audits=None, metrics=None):
         self.response = response
+        self.category = category
         self.format = format        
         self.page_limit = page_limit
         self.audits = audits
@@ -38,7 +39,10 @@ class ResponseHandler:
     def _process_excel(self, json_resp):
         audits_base = self._get_audits_base(json_resp)
         self.audit_results = self._parse_audits(audits_base)
-        if self.metrics is not None:
+        
+        has_metrics = self.metrics is not None
+        is_perf = self.category == 'performance' or self.category is None
+        if has_metrics and is_perf:
             self.metrics_results = self._parse_metrics(audits_base)        
             
     def _dump_json(self, json_resp):
