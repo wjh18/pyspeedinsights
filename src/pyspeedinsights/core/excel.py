@@ -3,8 +3,9 @@ import xlsxwriter
 
 class ExcelWorkbook:
     
-    def __init__(self, url, audit_results, metrics_results=None):
+    def __init__(self, url, metadata, audit_results, metrics_results=None):
         self.url = url
+        self.metadata = metadata
         self.audit_results = audit_results
         self.metrics_results = metrics_results
         self.workbook = None
@@ -13,6 +14,9 @@ class ExcelWorkbook:
     
     def _create_workbook(self):
         self.workbook = xlsxwriter.Workbook('psi-results.xlsx')
+        
+    def _write_metadata(self):
+        pass
         
     def _write_results(self, results, row=0, col=1):
         
@@ -62,19 +66,36 @@ class ExcelWorkbook:
             'align': 'left',
             'valign': 'vcenter'})
         
+    def _metadata_format(self):
+        return self.workbook.add_format({
+            'font_size': 20,
+            'bold': 1,
+            'align': 'left',
+            'valign': 'vcenter'})
+        
     def setup_worksheet(self):
         self._create_workbook()
         self.worksheet = self.workbook.add_worksheet()
         
         column_format = self._column_format()
         url_format = self._url_format()
-        row, col = 0, 0
+        metadata_format = self._metadata_format()
         
+        # Add metadata to the first cell of the Excel sheet
+        category = self.metadata['category'].upper()
+        category_score = self.metadata['category_score'] * 100
+        strategy = self.metadata['strategy'].upper()
+        metadata_value = f"{strategy} {category} REPORT - SCORE: {str(category_score)}"        
+        self.worksheet.write(0, 0, metadata_value, metadata_format)
+        
+        # Add header and data for the URL that was requested
+        row, col = 2, 0
         self.worksheet.set_column(col, col + 1, 15)
         self.worksheet.merge_range(row, col, row, col + 4, 'URL', column_format)
         self.worksheet.merge_range(row + 2, col, row + 2, col + 4, self.url, url_format)
         
-        self.cur_cell = [0, 4]        
+        # Set the current cell in row-col format for use later
+        self.cur_cell = [2, 4]
         
     def write_to_worksheet(self):
         if self.worksheet is not None:

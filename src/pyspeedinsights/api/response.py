@@ -13,6 +13,7 @@ class ResponseHandler:
         self.page_limit = page_limit
         self.audits = audits
         self.metrics = metrics
+        self.metadata = {}
         self.audit_results = {}
         self.metrics_results = {}
     
@@ -37,6 +38,8 @@ class ResponseHandler:
         return self._dump_json(json_resp)
     
     def _process_excel(self, json_resp):
+        self.metadata = self._parse_metadata(json_resp)
+        
         audits_base = self._get_audits_base(json_resp)
         self.audit_results = self._parse_audits(audits_base)
         
@@ -49,6 +52,17 @@ class ResponseHandler:
         # Dump raw json to a file
         with open('psi.json', 'w', encoding='utf-8') as f:
             json.dump(json_resp, f, ensure_ascii=False, indent=4)
+            
+    def _parse_metadata(self, json_resp):
+        json_base = json_resp["lighthouseResult"]
+        strategy = json_base["configSettings"]["formFactor"]
+        category_score = json_base["categories"][self.category]["score"]
+        metadata = {
+            'category': self.category,
+            'category_score': category_score,
+            'strategy': strategy
+        }
+        return metadata
         
     def _parse_audits(self, audits_base):
         results = {}
