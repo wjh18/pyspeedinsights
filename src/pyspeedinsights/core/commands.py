@@ -16,7 +16,7 @@ def parse_args():
     api_group.add_argument(
         "-c", "--category", metavar="\b", dest="category",
         choices=COMMAND_CHOICES['category'],
-        help="The Lighthouse category to run. Defaults to Performance.")
+        help="The Lighthouse category to run: accessibility, best-practices, performance (default), pwa or seo.")
     api_group.add_argument(
         "-l", "--locale", metavar="\b", dest="locale",
         choices=COMMAND_CHOICES['locale'],
@@ -24,13 +24,13 @@ def parse_args():
     api_group.add_argument(
         "-s", "--strategy", metavar="\b", dest="strategy",
         choices=COMMAND_CHOICES['strategy'],
-        help="The analysis strategy (desktop or mobile) to use. Defaults to desktop.")
+        help="The analysis strategy to use: desktop (default) or mobile.")
     api_group.add_argument(
         "-uc", "--campaign", metavar="\b", dest="utm_campaign",                        
-        help="UTM campaign name for analytics.")
+        help="The UTM campaign name for analytics.")
     api_group.add_argument(
         "-us", "--source", metavar="\b", dest="utm_source",
-        help="UTM campaign source for analytics.")
+        help="The UTM campaign source for analytics.")
     api_group.add_argument(
         "-t", "--token", metavar="\b", dest="captcha_token",                    
         help="The captcha token passed when filling out a captcha.")
@@ -39,14 +39,14 @@ def parse_args():
     proc_group = parser.add_argument_group('Processing Group')
     proc_group.add_argument(
         "-f", "--format", metavar="\b", dest="format",
-        choices=['json', 'excel'],
-        help="The format of the results. Specify json (default) or excel.")
+        choices=COMMAND_CHOICES['format'],
+        help="The format of the results: json (default) or excel.")
     proc_group.add_argument(
         "-m", "--metrics", metavar="\b", dest="metrics",
         choices=metrics_choices, nargs="+",
-        help="Specify which metric(s) you want to include in your report.\
-            This only works for Excel because the json output will include everything.\
-            If excluded, additional metrics will not be dumped to Excel.\
+        help="The additional metric(s) to include in your report.\
+            For Excel format only (the json output includes all metrics).\
+            If excluded, only the default audits will be saved to Excel.\
             Add the `all` argument to retrieve all available metrics."
     )
     

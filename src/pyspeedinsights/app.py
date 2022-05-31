@@ -15,6 +15,7 @@ def main():
     # values when passed as kwargs into ResponseHandler.
     # Not needed for get_response() func (all kwargs are default None).
     proc_args_dict = {k: v for k, v in proc_args_dict.items() if v is not None}
+    chosen_format = proc_args_dict.get('format')
     
     # Construct URL from cmd args and make API call
     response = get_response(**api_args_dict)
@@ -23,11 +24,7 @@ def main():
     r_handler = ResponseHandler(response, **proc_args_dict)
     r_handler.execute()
     
-    # Print the results (temporary verification)
-    pprint(r_handler.audit_results)
-    pprint(r_handler.metrics_results)
-    
-    if proc_args_dict.get('results') == 'excel':
+    if chosen_format == ('excel' or 'sitemap'):
         audit_results = r_handler.audit_results
         metrics_results = r_handler.metrics_results
         

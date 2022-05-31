@@ -11,6 +11,9 @@ COMMAND_CHOICES = {
         'en', 'en-GB', 'fil', 'fi', 'fr', 'de', 'el', 'iw', 'hi', 'hu',
         'id', 'it', 'ja', 'ko', 'lv', 'lt', 'no', 'pl', 'pt-BR', 'pt-PT',
         'ro', 'ru', 'sr', 'sk', 'sl', 'es', 'sv', 'th', 'tr', 'uk', 'vi',
+    ],
+    'format': [
+        'json', 'excel', 'sitemap'
     ]
 }
 
