@@ -4,6 +4,7 @@ from pyspeedinsights.core.commands import parse_args
 from pyspeedinsights.api.request import get_response
 from pyspeedinsights.api.response import ResponseHandler
 from pyspeedinsights.core.excel import ExcelWorkbook
+from pyspeedinsights.core.sitemap import request_sitemap, parse_sitemap
 
 
 def main():
@@ -17,6 +18,12 @@ def main():
     proc_args_dict = {k: v for k, v in proc_args_dict.items() if v is not None}
     format = proc_args_dict.get('format')
     category = api_args_dict.get('category')
+    
+    if format == 'sitemap':
+        sitemap_url = input("Enter the Sitemap URL you want to use for the analysis: ")
+        sitemap = request_sitemap(sitemap_url)
+        sitemap_urls = parse_sitemap(sitemap)
+        print(sitemap_urls)
     
     # Construct URL from cmd args and make API call
     response = get_response(**api_args_dict)

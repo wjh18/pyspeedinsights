@@ -34,9 +34,3 @@ def parse_sitemap(sitemap):
         urls.append(loc.text)
         
     return urls
-
-
-sitemap_url = 'https://www.wjholmes.com/sitemap.xml'
-sitemap = request_sitemap(sitemap_url)
-urls = parse_sitemap(sitemap)
-print(urls)

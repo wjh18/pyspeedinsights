@@ -40,13 +40,17 @@ def parse_args():
     proc_group.add_argument(
         "-f", "--format", metavar="\b", dest="format",
         choices=COMMAND_CHOICES['format'],
-        help="The format of the results: json (default), excel or sitemap.")
+        help="The format of the results: json (default), excel or sitemap.\
+            json outputs all response data to a json file (1 URL at a time).\
+            excel writes Lighthouse audits and (optionally) metrics to an Excel file (1 URL at a time).\
+            sitemap parses your SITEMAP_URL setting and behaves like excel but for all the URLs in your sitemap."
+    )
     proc_group.add_argument(
         "-m", "--metrics", metavar="\b", dest="metrics",
         choices=COMMAND_CHOICES['metrics'], nargs="+",
         help="The additional metric(s) to include in your report.\
             For Excel format only (the json output includes all metrics).\
-            If excluded, only the default audits will be saved to Excel.\
+            If excluded, only the default Lighthouse audits will be saved to Excel.\
             Add the `all` argument to retrieve all available metrics."
     )
     
