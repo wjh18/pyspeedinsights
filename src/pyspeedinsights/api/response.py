@@ -1,12 +1,12 @@
 import json
 
 from ..conf.settings import SITEMAP_URL
-from ..conf.data import default_audits, metrics_choices
+from ..conf.data import COMMAND_CHOICES
 
 
 class ResponseHandler:
     def __init__(self, response, format="json", page_limit=None,
-                 audits=default_audits, metrics=None):
+                 audits=None, metrics=None):
         self.response = response
         self.format = format        
         self.page_limit = page_limit
@@ -49,18 +49,19 @@ class ResponseHandler:
     def _parse_audits(self, audits_base):
         results = {}
         audits = audits_base
-        for field in self.audits:
-            audit = audits[field]
-            score = audit["score"]
-            num_value = audit["numericValue"]
-            results[field] = [score, num_value]
+        for k in audits.keys():
+            if audits[k].get('score') is not None:
+                score = audits[k].get('score')
+                num_value = audits[k].get('numericValue', 'n/a')
+                results[k] = [score*100, num_value]
+            
         return results
     
     def _parse_metrics(self, audits_base):
         results = {}
         metrics = audits_base["metrics"]["details"]["items"][0]
         if "all" in self.metrics:
-            metrics_to_use = metrics_choices
+            metrics_to_use = COMMAND_CHOICES['metrics']
             metrics_to_use.remove('all')
         else:
             metrics_to_use = self.metrics

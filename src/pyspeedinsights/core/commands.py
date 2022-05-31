@@ -1,6 +1,6 @@
 import argparse
 
-from ..conf.data import COMMAND_CHOICES, metrics_choices
+from ..conf.data import COMMAND_CHOICES
 
 
 def parse_args():
@@ -43,7 +43,7 @@ def parse_args():
         help="The format of the results: json (default) or excel.")
     proc_group.add_argument(
         "-m", "--metrics", metavar="\b", dest="metrics",
-        choices=metrics_choices, nargs="+",
+        choices=COMMAND_CHOICES['metrics'], nargs="+",
         help="The additional metric(s) to include in your report.\
             For Excel format only (the json output includes all metrics).\
             If excluded, only the default audits will be saved to Excel.\

@@ -13,4 +13,5 @@ src/*.egg-info
 .env
 
 # Package specific
-psi.json
+psi*.json
+psi*.xlsx
