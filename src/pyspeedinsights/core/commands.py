@@ -40,7 +40,7 @@ def parse_args():
     proc_group.add_argument(
         "-f", "--format", metavar="\b", dest="format",
         choices=COMMAND_CHOICES['format'],
-        help="The format of the results: json (default) or excel.")
+        help="The format of the results: json (default), excel or sitemap.")
     proc_group.add_argument(
         "-m", "--metrics", metavar="\b", dest="metrics",
         choices=COMMAND_CHOICES['metrics'], nargs="+",
