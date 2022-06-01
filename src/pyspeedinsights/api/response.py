@@ -4,12 +4,11 @@ from ..conf.data import COMMAND_CHOICES
 
 
 class ResponseHandler:
-    def __init__(self, response, category='performance', format="json", page_limit=None,
+    def __init__(self, response, category='performance', format="json",
                  audits=None, metrics=None):
         self.response = response
         self.category = category
         self.format = format        
-        self.page_limit = page_limit
         self.audits = audits
         self.metrics = metrics
         self.metadata = {}
