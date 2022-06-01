@@ -126,10 +126,10 @@ class ExcelWorkbook:
             self.worksheet.merge_range(
                 self.cur_cell[0] + 2, 0, self.cur_cell[0] + 2, self.cur_cell[1], self.url, url_format
             )
-            
-            for results in [self.audit_results, self.metrics_results]:
+            results = [r for r in [self.audit_results, self.metrics_results] if r is not None]
+            for result in results:
                 row, col = self.cur_cell[0], self.cur_cell[1] + 1
-                new_pos = self._write_results(results, is_first, row=row, col=col)
+                new_pos = self._write_results(result, is_first, row=row, col=col)
                 self.cur_cell = new_pos
             self.cur_cell[0] += 1
             self.cur_cell[1] = 4

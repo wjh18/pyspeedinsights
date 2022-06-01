@@ -3,87 +3,117 @@ import json
 from ..conf.data import COMMAND_CHOICES
 
 
-class ResponseHandler:
-    def __init__(self, response, category='performance', format="json",
-                 audits=None, metrics=None):
-        self.response = response
-        self.category = category
-        self.format = format        
-        self.audits = audits
-        self.metrics = metrics
-        self.metadata = {}
-        self.audit_results = {}
-        self.metrics_results = {}
+def process_response(response, category='performance', format="json", metrics=None):
+    """
+    Called from main program to process API responses.
+    """
+    results = _to_format(response, category, format, metrics)
+    return results
+
+
+def _to_format(response, category, format, metrics):
+    """
+    Process API responses based on the format chosen by the user.
+    """
+    json_resp = response.json()
     
-    def _to_format(self):
-        json_resp = self.response.json()
-        if self.format == "json":
-            self._process_json(json_resp)
-        elif self.format in ["excel", "sitemap"]:
-            self._process_excel(json_resp)
-            
-    def _process_json(self, json_resp):
-        """
-        _dump_json() is likely sufficient for now, but if any other json
-        operations are needed in the future, this class will be able to call
-        all of them while maintaining a separation of concerns between methods.
-        """
-        return self._dump_json(json_resp)
-    
-    def _process_excel(self, json_resp):
-        self.metadata = self._parse_metadata(json_resp)
-        
-        audits_base = self._get_audits_base(json_resp)
-        self.audit_results = self._parse_audits(audits_base)
-        
-        has_metrics = self.metrics is not None
-        is_perf = self.category == 'performance' or self.category is None
-        if has_metrics and is_perf:
-            self.metrics_results = self._parse_metrics(audits_base)        
-            
-    def _dump_json(self, json_resp):
-        # Dump raw json to a file
-        with open('psi.json', 'w', encoding='utf-8') as f:
-            json.dump(json_resp, f, ensure_ascii=False, indent=4)
-            
-    def _parse_metadata(self, json_resp):
-        json_base = json_resp["lighthouseResult"]
-        strategy = json_base["configSettings"]["formFactor"]        
-        category_score = json_base["categories"][self.category]["score"]
-        metadata = {
-            'category': self.category,
-            'category_score': category_score,
-            'strategy': strategy
-        }
-        return metadata
-        
-    def _parse_audits(self, audits_base):
-        results = {}
-        audits = audits_base
-        for k in audits.keys():
-            if audits[k].get('score') is not None:
-                score = audits[k].get('score')
-                num_value = audits[k].get('numericValue', 'n/a')
-                results[k] = [score*100, num_value]
-            
+    if format == "json":
+        _process_json(json_resp)
+    elif format in ["excel", "sitemap"]:
+        results = _process_excel(json_resp, category, metrics)
         return results
+        
+
+def _process_json(json_resp):
+    """
+    Dump raw json to a file at the root.
+    """
+    with open('psi.json', 'w', encoding='utf-8') as f:
+        json.dump(json_resp, f, ensure_ascii=False, indent=4)
+
+
+def _process_excel(json_resp, category, metrics):
+    """
+    Call various processing functions for Excel or Sitemap formats.
+    """
+    # Location of the audits field in json response
+    audits_base = _get_audits_base(json_resp)
     
-    def _parse_metrics(self, audits_base):
-        results = {}
-        metrics = audits_base["metrics"]["details"]["items"][0]
-        if "all" in self.metrics:
-            metrics_to_use = COMMAND_CHOICES['metrics']
-            metrics_to_use.remove('all')
-        else:
-            metrics_to_use = self.metrics
-        for field in metrics_to_use:
-            metric = metrics[field]
-            results[field] = metric
-        return results
+    metadata = _parse_metadata(json_resp, category)
+    audit_results = _parse_audits(audits_base)
+    metrics_results = None
     
-    @staticmethod
-    def _get_audits_base(json_resp):
-        return json_resp["lighthouseResult"]["audits"]
+    # Only process metrics for performance category
+    if metrics is not None and category == 'performance':
+        metrics_results = _parse_metrics(audits_base, metrics)
+        
+    results = {
+        'metadata': metadata, 
+        'audit_results': audit_results, 
+        'metrics_results': metrics_results
+    }
+        
+    return results
     
-    def execute(self):
-        return self._to_format()
+    
+def _parse_metadata(json_resp, category):
+    """
+    Parse metadata from json response for writing to Excel sheet.
+    """
+    json_base = json_resp["lighthouseResult"]
+    strategy = json_base["configSettings"]["formFactor"]        
+    category_score = json_base["categories"][category]["score"]
+    
+    metadata = {
+        'category': category,
+        'category_score': category_score,
+        'strategy': strategy
+    }
+    
+    return metadata
+
+    
+def _parse_audits(audits_base):
+    """
+    Parse Lighthouse audits from json response for writing to Excel sheet.
+    """
+    results = {}
+    audits = audits_base    
+    
+    # Create results dict with scores and numerical values for each audit.
+    for k in audits.keys():
+        score = audits[k].get('score')
+        if score is not None:
+            num_value = audits[k].get('numericValue', 'n/a')
+            results[k] = [score*100, num_value]
+        
+    return results
+
+
+def _parse_metrics(audits_base, metrics):
+    """
+    Parse performance metrics from json response for writing to Excel sheet.
+    """
+    results = {}
+    metrics_loc = audits_base["metrics"]["details"]["items"][0]
+    
+    if "all" in metrics:
+        metrics_to_use = COMMAND_CHOICES['metrics']
+        # Remove 'all' cmd option to avoid key errors (not in json resp)
+        metrics_to_use.remove('all')
+    else:
+        metrics_to_use = metrics
+    
+    # Create new dict of metrics based on user's chosen metrics    
+    for field in metrics_to_use:
+        metric = metrics_loc[field]
+        results[field] = metric
+        
+    return results
+
+
+def _get_audits_base(json_resp):
+    """
+    Get location of the audits field in json response.
+    """
+    return json_resp["lighthouseResult"]["audits"]

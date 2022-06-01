@@ -1,6 +1,6 @@
 from pyspeedinsights.core.commands import parse_args
 from pyspeedinsights.api.request import get_response, get_base_url_from_sitemap
-from pyspeedinsights.api.response import ResponseHandler
+from pyspeedinsights.api.response import process_response
 from pyspeedinsights.core.excel import ExcelWorkbook
 from pyspeedinsights.core.sitemap import request_sitemap, parse_sitemap
 
@@ -23,7 +23,7 @@ def main():
     if format == 'sitemap':
         sitemap_url = url
         sitemap = request_sitemap(sitemap_url)
-        request_urls = parse_sitemap(sitemap)
+        request_urls = parse_sitemap(sitemap)        
     else:
         request_urls = [url]
     
@@ -32,16 +32,16 @@ def main():
         api_args_dict.setdefault('url', url)
         if format == ('sitemap'):
             api_args_dict['url'] = get_base_url_from_sitemap(url)
+            
         response = get_response(**api_args_dict)
     
         # Process the response based on cmd args
-        r_handler = ResponseHandler(response, category, **proc_args_dict)
-        r_handler.execute()
+        results = process_response(response, category, **proc_args_dict)
         
         if format in ['excel', 'sitemap']:
-            metadata = r_handler.metadata
-            audit_results = r_handler.audit_results
-            metrics_results = r_handler.metrics_results
+            metadata = results['metadata']
+            audit_results = results['audit_results']
+            metrics_results = results['metrics_results']
             
             # Create worksheet on first iteration and update attrs after that
             is_first = i == 0
