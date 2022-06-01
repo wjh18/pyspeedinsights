@@ -1,6 +1,5 @@
 import json
 
-from ..conf.settings import SITEMAP_URL
 from ..conf.data import COMMAND_CHOICES
 
 
@@ -16,10 +15,6 @@ class ResponseHandler:
         self.metadata = {}
         self.audit_results = {}
         self.metrics_results = {}
-    
-    @staticmethod
-    def _get_sitemap_url():
-        return SITEMAP_URL
     
     def _to_format(self):
         json_resp = self.response.json()

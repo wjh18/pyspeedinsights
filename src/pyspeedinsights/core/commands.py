@@ -43,7 +43,7 @@ def parse_args():
         help="The format of the results: json (default), excel or sitemap.\
             json outputs all response data to a json file (1 URL at a time).\
             excel writes Lighthouse audits and (optionally) metrics to an Excel file (1 URL at a time).\
-            sitemap parses your SITEMAP_URL setting and behaves like excel but for all the URLs in your sitemap."
+            sitemap parses the sitemap URL you provide and collects data for all your pages to Excel."
     )
     proc_group.add_argument(
         "-m", "--metrics", metavar="\b", dest="metrics",
