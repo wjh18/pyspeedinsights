@@ -18,7 +18,7 @@ class ExcelWorkbook:
     def _write_metadata(self):
         pass
         
-    def _write_results(self, results, row=0, col=1):
+    def _write_results(self, results, is_first, row=0, col=1):
         
         column_format = self._column_format()
         data_format = self._data_format()
@@ -31,9 +31,10 @@ class ExcelWorkbook:
                 value = v[1]
                 score_format = self._score_format(score)
                 
-                self.worksheet.merge_range(row, col, row, col + 1, k, column_format)
-                self.worksheet.write(row + 1, col, 'Score', column_format)
-                self.worksheet.write(row + 1, col + 1, 'Value', column_format)
+                if is_first:
+                    self.worksheet.merge_range(row, col, row, col + 1, k, column_format)
+                    self.worksheet.write(row + 1, col, 'Score', column_format)
+                    self.worksheet.write(row + 1, col + 1, 'Value', column_format)
                 self.worksheet.write(row + 2, col, score, score_format)
                 self.worksheet.write(row + 2, col + 1, value, score_format)
                 
@@ -43,7 +44,8 @@ class ExcelWorkbook:
                     col += 2
                 
             elif results == self.metrics_results:
-                self.worksheet.write(row, col, k, column_format)
+                if is_first:
+                    self.worksheet.write(row, col, k, column_format)
                 self.worksheet.write(row + 1, col, 'Value', column_format)
                 self.worksheet.write(row + 2, col, v, data_format)
                 col += 1
@@ -100,8 +102,7 @@ class ExcelWorkbook:
         self._create_workbook()
         self.worksheet = self.workbook.add_worksheet()
         
-        column_format = self._column_format()
-        url_format = self._url_format()
+        column_format = self._column_format()        
         metadata_format = self._metadata_format()
         
         # Add metadata to the first cell of the Excel sheet
@@ -115,16 +116,20 @@ class ExcelWorkbook:
         row, col = 2, 0
         self.worksheet.set_column(col, col + 1, 15)
         self.worksheet.merge_range(row, col, row, col + 4, 'URL', column_format)
-        self.worksheet.merge_range(row + 2, col, row + 2, col + 4, self.url, url_format)
         
         # Set the current cell in row-col format for use later
         self.cur_cell = [2, 4]
         
-    def write_to_worksheet(self):
+    def write_to_worksheet(self, is_first):
         if self.worksheet is not None:
+            url_format = self._url_format()
+            self.worksheet.merge_range(
+                self.cur_cell[0] + 2, 0, self.cur_cell[0] + 2, self.cur_cell[1], self.url, url_format
+            )
+            
             for results in [self.audit_results, self.metrics_results]:
                 row, col = self.cur_cell[0], self.cur_cell[1] + 1
-                new_pos = self._write_results(results, row=row, col=col)
+                new_pos = self._write_results(results, is_first, row=row, col=col)
                 self.cur_cell = new_pos
-        
-        self.workbook.close()
+            self.cur_cell[0] += 1
+            self.cur_cell[1] = 4

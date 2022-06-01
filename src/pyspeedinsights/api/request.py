@@ -1,3 +1,4 @@
+import time
 from urllib.parse import urlsplit
 
 import requests
@@ -24,8 +25,10 @@ def get_response(url, category=None, locale=None, strategy=None,
         raise SystemExit(err)
     
     try:
-        resp = requests.get(base_url, params=params)
+        print("Making request...")
+        resp = requests.get(base_url, params=params)        
         resp.raise_for_status()
+        print("Request successful!")
     except requests.exceptions.HTTPError as errh:
         raise SystemExit(errh)
     except requests.exceptions.ConnectionError as errc:
@@ -34,6 +37,8 @@ def get_response(url, category=None, locale=None, strategy=None,
         raise SystemExit(errt)
     except requests.exceptions.RequestException as err:
         raise SystemExit(err)
+    
+    time.sleep(1)
     
     return resp
 
@@ -53,3 +58,8 @@ def url_validator(url):
         return u.geturl()
     except:
         raise SystemExit(err)
+    
+
+def get_base_url_from_sitemap(url):
+    u = urlsplit(url)
+    return u.scheme + '://' + u.hostname

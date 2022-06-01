@@ -4,7 +4,7 @@ from ..conf.data import COMMAND_CHOICES
 
 
 class ResponseHandler:
-    def __init__(self, response, category=None, format="json", page_limit=None,
+    def __init__(self, response, category='performance', format="json", page_limit=None,
                  audits=None, metrics=None):
         self.response = response
         self.category = category
@@ -18,10 +18,9 @@ class ResponseHandler:
     
     def _to_format(self):
         json_resp = self.response.json()
-        
         if self.format == "json":
             self._process_json(json_resp)
-        elif self.format == "excel":
+        elif self.format in ["excel", "sitemap"]:
             self._process_excel(json_resp)
             
     def _process_json(self, json_resp):
@@ -50,7 +49,7 @@ class ResponseHandler:
             
     def _parse_metadata(self, json_resp):
         json_base = json_resp["lighthouseResult"]
-        strategy = json_base["configSettings"]["formFactor"]
+        strategy = json_base["configSettings"]["formFactor"]        
         category_score = json_base["categories"][self.category]["score"]
         metadata = {
             'category': self.category,

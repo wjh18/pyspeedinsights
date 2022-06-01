@@ -12,7 +12,7 @@ def parse_args():
     # Add argument options for default API call query params
     api_group = parser.add_argument_group('API Group')
     api_group.add_argument(
-        "url", help="The URL of the site you want to analyze.")
+        "url", help="The URL or Sitemap URL of the site you want to analyze.")
     api_group.add_argument(
         "-c", "--category", metavar="\b", dest="category",
         choices=COMMAND_CHOICES['category'],
