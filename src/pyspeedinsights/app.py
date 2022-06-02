@@ -1,8 +1,9 @@
 from pyspeedinsights.core.commands import parse_args
-from pyspeedinsights.api.request import get_response, get_base_url_from_sitemap
+from pyspeedinsights.api.request import get_response
 from pyspeedinsights.api.response import process_response
 from pyspeedinsights.core.excel import ExcelWorkbook
-from pyspeedinsights.core.sitemap import request_sitemap, parse_sitemap
+from pyspeedinsights.core.sitemap import (
+    request_sitemap, parse_sitemap, get_base_url_from_sitemap)
 
 
 def main():

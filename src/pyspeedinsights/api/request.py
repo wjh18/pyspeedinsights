@@ -1,4 +1,3 @@
-import time
 from urllib.parse import urlsplit
 
 import requests
@@ -7,7 +6,7 @@ import keyring
 
 def get_response(url, category=None, locale=None, strategy=None, 
              utm_campaign=None, utm_source=None, captcha_token=None):
-    url = url_validator(url)
+    url = validate_url(url)
     params = {
         'url': url, 'category': category, 'locale': locale,
         'strategy': strategy, 'utm_campaign': utm_campaign,
@@ -41,7 +40,7 @@ def get_response(url, category=None, locale=None, strategy=None,
     return resp
 
 
-def url_validator(url):
+def validate_url(url):
     """
     Adds a scheme to the URL if missing.
     Validates that the URL is fully qualified and not just a path.
@@ -56,8 +55,3 @@ def url_validator(url):
         return u.geturl()
     except:
         raise SystemExit(err)
-    
-
-def get_base_url_from_sitemap(url):
-    u = urlsplit(url)
-    return u.scheme + '://' + u.hostname

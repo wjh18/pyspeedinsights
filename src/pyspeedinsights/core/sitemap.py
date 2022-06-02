@@ -1,13 +1,18 @@
 import xml.etree.ElementTree as ET
+from urllib.parse import urlsplit
+from os.path import splitext
 
 import requests
 
-from pyspeedinsights.api.request import url_validator
+from pyspeedinsights.api.request import validate_url
 
 
 def request_sitemap(url):
-    url = url_validator(url)
+    url = validate_url(url)
     
+    if validate_sitemap_url(url) != True:
+        err = "Invalid sitemap provided. Please provide a link to a valid XML sitemap."
+        raise SystemExit(err)
     try:
         resp = requests.get(url)
         resp.raise_for_status()
@@ -34,3 +39,15 @@ def parse_sitemap(sitemap):
         urls.append(loc.text)
         
     return urls
+
+
+def get_base_url_from_sitemap(url):
+    u = urlsplit(url)
+    return u.scheme + '://' + u.hostname
+
+
+def validate_sitemap_url(url):
+    u = urlsplit(url)
+    ext = splitext(u.path)[1]
+    if ext == '.xml':
+        return True
