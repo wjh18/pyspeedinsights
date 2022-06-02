@@ -8,6 +8,9 @@ from pyspeedinsights.api.request import validate_url
 
 
 def request_sitemap(url):
+    """
+    Get sitemap from URL provided in cmd args.
+    """
     url = validate_url(url)
     
     if validate_sitemap_url(url) != True:
@@ -30,6 +33,9 @@ def request_sitemap(url):
 
     
 def parse_sitemap(sitemap):
+    """
+    Parse URLs from XML sitemap and return a list of them.
+    """
     root = ET.fromstring(sitemap)
     namespace = '{http://www.sitemaps.org/schemas/sitemap/0.9}'
 
@@ -41,12 +47,10 @@ def parse_sitemap(sitemap):
     return urls
 
 
-def get_base_url_from_sitemap(url):
-    u = urlsplit(url)
-    return u.scheme + '://' + u.hostname
-
-
 def validate_sitemap_url(url):
+    """
+    Validate that the sitemap URL is in .xml format.
+    """
     u = urlsplit(url)
     ext = splitext(u.path)[1]
     if ext == '.xml':

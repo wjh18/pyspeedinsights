@@ -15,7 +15,7 @@ def _to_format(response, category, format, metrics):
     """
     Process API responses based on the format chosen by the user.
     """
-    json_resp = response.json()
+    json_resp = response
     
     if format == "json":
         _process_json(json_resp)

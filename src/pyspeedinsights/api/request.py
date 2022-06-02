@@ -1,17 +1,23 @@
+import aiohttp
+import asyncio
 from urllib.parse import urlsplit
 
-import requests
 import keyring
-    
 
-def get_response(url, category=None, locale=None, strategy=None, 
+
+async def get_response(url, session, category=None, locale=None, strategy=None, 
              utm_campaign=None, utm_source=None, captcha_token=None):
+    """
+    Make async calls to PSI API for each site URL and return the response.
+    """
+    
     url = validate_url(url)
     params = {
         'url': url, 'category': category, 'locale': locale,
         'strategy': strategy, 'utm_campaign': utm_campaign,
         'utm_source': utm_source, 'captcha_token': captcha_token
     }
+    params = {k: v for k, v in params.items() if v is not None}
     base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     
     PSI_API_KEY = keyring.get_password("system", "psikey")
@@ -25,19 +31,39 @@ def get_response(url, category=None, locale=None, strategy=None,
     
     try:
         print("Making request...")
-        resp = requests.get(base_url, params=params)        
+        resp = await session.get(url=base_url, params=params)              
         resp.raise_for_status()
         print("Request successful!")
-    except requests.exceptions.HTTPError as errh:
-        raise SystemExit(errh)
-    except requests.exceptions.ConnectionError as errc:
-        raise SystemExit(errc)
-    except requests.exceptions.Timeout as errt:
-        raise SystemExit(errt)
-    except requests.exceptions.RequestException as err:
-        raise SystemExit(err)
+    except aiohttp.ClientConnectionError as err_cc:
+        raise SystemExit(err_cc)
+    except aiohttp.ClientError as err_c:
+        raise SystemExit(err_c)
+    
+    resp = await resp.json()
     
     return resp
+
+
+async def gather_responses(request_urls, api_args_dict):
+    """
+    Gather tasks and await the return of the responses for processing.
+    """
+    async with aiohttp.ClientSession() as session:
+        tasks = get_tasks(request_urls, session, api_args_dict)
+        responses = await asyncio.gather(*tasks)
+    return responses
+
+
+def get_tasks(request_urls, session, api_args_dict):
+    """
+    Create a list of tasks that call get_response() with request params.
+    """
+    tasks = []
+    for url in request_urls:
+        api_args_dict['url'] = url
+        api_args_dict.setdefault('session', session)
+        tasks.append(get_response(**api_args_dict))
+    return tasks
 
 
 def validate_url(url):
