@@ -38,8 +38,6 @@ def get_response(url, category=None, locale=None, strategy=None,
     except requests.exceptions.RequestException as err:
         raise SystemExit(err)
     
-    time.sleep(1)
-    
     return resp
 
 
