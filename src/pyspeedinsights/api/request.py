@@ -5,12 +5,13 @@ from urllib.parse import urlsplit
 import keyring
 
 
-async def get_response(url, session, category=None, locale=None, strategy=None, 
+next_delay = 1
+
+async def get_response(url, category=None, locale=None, strategy=None, 
              utm_campaign=None, utm_source=None, captcha_token=None):
     """
     Make async calls to PSI API for each site URL and return the response.
     """
-    
     url = validate_url(url)
     params = {
         'url': url, 'category': category, 'locale': locale,
@@ -20,6 +21,7 @@ async def get_response(url, session, category=None, locale=None, strategy=None,
     params = {k: v for k, v in params.items() if v is not None}
     base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     
+    # Get API key from keystore with keyring
     PSI_API_KEY = keyring.get_password("system", "psikey")
     if PSI_API_KEY is not None:
         params['key'] = PSI_API_KEY
@@ -29,39 +31,47 @@ async def get_response(url, session, category=None, locale=None, strategy=None,
               \nTo verify your key can be found, run the command `keyring get system psikey`."
         raise SystemExit(err)
     
-    try:
-        print("Making request...")
-        resp = await session.get(url=base_url, params=params)              
-        resp.raise_for_status()
-        print("Request successful!")
-    except aiohttp.ClientConnectionError as err_cc:
-        raise SystemExit(err_cc)
-    except aiohttp.ClientError as err_c:
-        raise SystemExit(err_c)
+    # Add a delay between tasks to avoid 500 errors from server
+    global next_delay
+    next_delay += 1
+    await asyncio.sleep(next_delay)
     
-    resp = await resp.json()
+    print(f"Sending request... ({params['url']})")
     
-    return resp
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url=base_url, params=params) as resp:
+    
+            # Retry on errors up to 5 times
+            json_resp = None
+            retry_attempts = 5
+            while json_resp is None and retry_attempts >= 1:
+                try:                    
+                    resp.raise_for_status()         
+                    json_resp = await resp.json()
+                    print(f"Request successful! ({params['url']})")
+                except aiohttp.ClientError as err_c:
+                    print(err_c)
+                    await asyncio.sleep(1)
+    
+    return json_resp
 
 
 async def gather_responses(request_urls, api_args_dict):
     """
     Gather tasks and await the return of the responses for processing.
     """
-    async with aiohttp.ClientSession() as session:
-        tasks = get_tasks(request_urls, session, api_args_dict)
-        responses = await asyncio.gather(*tasks)
+    tasks = get_tasks(request_urls, api_args_dict)
+    responses = await asyncio.gather(*tasks)
     return responses
 
 
-def get_tasks(request_urls, session, api_args_dict):
+def get_tasks(request_urls, api_args_dict):
     """
     Create a list of tasks that call get_response() with request params.
     """
     tasks = []
     for url in request_urls:
         api_args_dict['url'] = url
-        api_args_dict.setdefault('session', session)
         tasks.append(get_response(**api_args_dict))
     return tasks
 
