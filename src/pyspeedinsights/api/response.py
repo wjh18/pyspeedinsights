@@ -1,4 +1,5 @@
 import json
+import copy
 from datetime import datetime
 
 from ..conf.data import COMMAND_CHOICES
@@ -104,7 +105,7 @@ def _parse_metrics(audits_base, metrics):
     metrics_loc = audits_base["metrics"]["details"]["items"][0]
     
     if "all" in metrics:
-        metrics_to_use = COMMAND_CHOICES['metrics']
+        metrics_to_use = copy.copy(COMMAND_CHOICES['metrics'])
         # Remove 'all' cmd option to avoid key errors (not in json resp)
         metrics_to_use.remove('all')
     else:
