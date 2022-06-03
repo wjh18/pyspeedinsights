@@ -17,6 +17,7 @@ def request_sitemap(url):
         err = "Invalid sitemap provided. Please provide a link to a valid XML sitemap."
         raise SystemExit(err)
     try:
+        print(f"Requesting sitemap... ({url})")
         resp = requests.get(url)
         resp.raise_for_status()
     except requests.exceptions.HTTPError as errh:
@@ -29,6 +30,8 @@ def request_sitemap(url):
         raise SystemExit(err)
     
     sitemap = resp.text
+    print("Sitemap retrieval successful!")
+    
     return sitemap
 
     
@@ -36,6 +39,8 @@ def parse_sitemap(sitemap):
     """
     Parse URLs from XML sitemap and return a list of them.
     """
+    print("Parsing URLs from sitemap...")
+    
     root = ET.fromstring(sitemap)
     namespace = '{http://www.sitemaps.org/schemas/sitemap/0.9}'
 

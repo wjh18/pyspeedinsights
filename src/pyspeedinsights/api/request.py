@@ -49,9 +49,13 @@ async def get_response(url, category=None, locale=None, strategy=None,
                     resp.raise_for_status()         
                     json_resp = await resp.json()
                     print(f"Request successful! ({params['url']})")
-                except aiohttp.ClientError as err_c:
-                    print(err_c)
-                    await asyncio.sleep(1)
+                except aiohttp.ClientError as err_c:                    
+                    if retry_attempts < 1:
+                        raise SystemExit(err_c)
+                    else:
+                        print(err_c)
+                        retry_attempts -= 1
+                        await asyncio.sleep(1)                        
     
     return json_resp
 
@@ -61,7 +65,9 @@ async def gather_responses(request_urls, api_args_dict):
     Gather tasks and await the return of the responses for processing.
     """
     tasks = get_tasks(request_urls, api_args_dict)
+    print(f"Preparing {len(tasks)} URL(s)...")
     responses = await asyncio.gather(*tasks)
+    print(f"{len(responses)}/{len(tasks)} URLs processed successfully.")
     return responses
 
 

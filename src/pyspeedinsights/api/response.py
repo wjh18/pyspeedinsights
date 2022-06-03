@@ -30,6 +30,7 @@ def _process_json(json_resp):
     """
     with open('psi.json', 'w', encoding='utf-8') as f:
         json.dump(json_resp, f, ensure_ascii=False, indent=4)
+        print("JSON processed. Check your current directory.")
 
 
 def _process_excel(json_resp, category, metrics):

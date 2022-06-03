@@ -51,6 +51,7 @@ def main():
             # Create worksheet on first iteration, simply update attrs after that
             is_first = i == 0
             if is_first:
+                print("Creating Excel workbook...")
                 workbook = ExcelWorkbook(final_url, metadata, audit_results, metrics_results)
                 workbook.setup_worksheet()
             else:
@@ -65,3 +66,4 @@ def main():
     if format in ['excel', 'sitemap']:
         # Close workbook to save the Excel sheet
         workbook.workbook.close()
+        print("Workbook saved. Check your current directory!")
