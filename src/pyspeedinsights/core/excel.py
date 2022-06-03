@@ -13,7 +13,12 @@ class ExcelWorkbook:
         self.cur_cell = None
     
     def _create_workbook(self):
-        self.workbook = xlsxwriter.Workbook('psi-results.xlsx')
+        strategy = self.metadata['strategy']
+        category = self.metadata['category']        
+        date = self.metadata['timestamp']
+        
+        self.workbook = xlsxwriter.Workbook(
+            f'psi-s-{strategy}-c-{category}-{date}.xlsx')
         
     def _write_metadata(self):
         pass

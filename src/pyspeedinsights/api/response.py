@@ -1,34 +1,37 @@
 import json
+from datetime import datetime
 
 from ..conf.data import COMMAND_CHOICES
 
 
-def process_response(response, category='performance', format="json", metrics=None):
+def process_response(response, category='performance', strategy='desktop', 
+                     format="json", metrics=None):
     """
     Called from main program to process API responses.
     """
-    results = _to_format(response, category, format, metrics)
+    results = _to_format(response, category, strategy, format, metrics)
     return results
 
 
-def _to_format(response, category, format, metrics):
+def _to_format(response, category, strategy, format, metrics):
     """
     Process API responses based on the format chosen by the user.
     """
     json_resp = response
     
     if format == "json":
-        _process_json(json_resp)
+        _process_json(json_resp, category, strategy)
     elif format in ["excel", "sitemap"]:
         results = _process_excel(json_resp, category, metrics)
         return results
         
 
-def _process_json(json_resp):
+def _process_json(json_resp, category, strategy):
     """
     Dump raw json to a file at the root.
     """
-    with open('psi.json', 'w', encoding='utf-8') as f:
+    date = _get_timestamp(json_resp)
+    with open(f'psi-s-{strategy}-c-{category}-{date}.json', 'w', encoding='utf-8') as f:
         json.dump(json_resp, f, ensure_ascii=False, indent=4)
         print("JSON processed. Check your current directory.")
 
@@ -64,11 +67,13 @@ def _parse_metadata(json_resp, category):
     json_base = json_resp["lighthouseResult"]
     strategy = json_base["configSettings"]["formFactor"]        
     category_score = json_base["categories"][category]["score"]
+    timestamp = _get_timestamp(json_resp)
     
     metadata = {
         'category': category,
         'category_score': category_score,
-        'strategy': strategy
+        'strategy': strategy,
+        'timestamp': timestamp
     }
     
     return metadata
@@ -118,3 +123,13 @@ def _get_audits_base(json_resp):
     Get location of the audits field in json response.
     """
     return json_resp["lighthouseResult"]["audits"]
+
+
+def _get_timestamp(json_resp):
+    """
+    Parse the timestamp of the analysis from JSON response.
+    """
+    timestamp = json_resp['analysisUTCTimestamp']
+    date = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
+    
+    return date

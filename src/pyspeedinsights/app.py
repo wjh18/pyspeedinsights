@@ -22,8 +22,12 @@ def main():
     
     format = proc_args_dict.get('format')
     category = api_args_dict.get('category')
+    strategy = api_args_dict.get('strategy')
+    
     if category is None:
         category = 'performance'
+    if strategy is None:
+        strategy = 'desktop'
         
     url = api_args_dict.get('url')
     
@@ -40,7 +44,7 @@ def main():
     
     for i, response in enumerate(responses):
         # Process the response based on cmd args
-        results = process_response(response, category, **proc_args_dict)
+        results = process_response(response, category, strategy, **proc_args_dict)
         
         if format in ['excel', 'sitemap']:
             metadata = results['metadata']
