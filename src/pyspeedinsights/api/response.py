@@ -93,6 +93,8 @@ def _parse_audits(audits_base):
         if score is not None:
             num_value = audits[k].get('numericValue', 'n/a')
             results[k] = [score*100, num_value]
+        else:
+            results[k] = ['n/a', 'n/a']
         
     return results
 

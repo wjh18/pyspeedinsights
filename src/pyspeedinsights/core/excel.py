@@ -84,7 +84,9 @@ class ExcelWorkbook:
             'valign': 'vcenter'})
         
     def _score_format(self, score):
-        if score >= 90:
+        if not isinstance(score, int):
+            color = 'white'
+        elif score >= 90:
             color = 'lime'            
         elif 90 > score >= 80:
             color = 'green'
@@ -117,7 +119,7 @@ class ExcelWorkbook:
         metadata_value = f"{strategy} {category} REPORT - SCORE: {str(category_score)}"        
         self.worksheet.write(0, 0, metadata_value, metadata_format)
         
-        # Add header and data for the URL that was requested
+        # Add URL header with a wider column of merged cells
         row, col = 2, 0
         self.worksheet.set_column(col, col + 1, 15)
         self.worksheet.merge_range(row, col, row, col + 4, 'URL', column_format)
@@ -131,6 +133,7 @@ class ExcelWorkbook:
             self.worksheet.merge_range(
                 self.cur_cell[0] + 2, 0, self.cur_cell[0] + 2, self.cur_cell[1], self.url, url_format
             )
+            
             results = [r for r in [self.audit_results, self.metrics_results] if r is not None]
             for result in results:
                 row, col = self.cur_cell[0], self.cur_cell[1] + 1
