@@ -84,7 +84,7 @@ class ExcelWorkbook:
             'valign': 'vcenter'})
         
     def _score_format(self, score):
-        if not isinstance(score, int):
+        if score == 'n/a':
             color = 'white'
         elif score >= 90:
             color = 'lime'            
