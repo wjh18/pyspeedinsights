@@ -95,6 +95,9 @@ def _parse_audits(audits_base):
             results[k] = [score*100, num_value]
         else:
             results[k] = ['n/a', 'n/a']
+            
+    # Sort dict alphabetically so each audit is written to Excel in order
+    results = dict(sorted(results.items()))
         
     return results
 
@@ -117,6 +120,9 @@ def _parse_metrics(audits_base, metrics):
     for field in metrics_to_use:
         metric = metrics_loc[field]
         results[field] = metric
+        
+    # Sort dict alphabetically so each metric is written to Excel in order
+    results = dict(sorted(results.items()))
         
     return results
 
