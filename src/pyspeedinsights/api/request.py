@@ -44,7 +44,7 @@ async def get_response(url, category=None, locale=None, strategy=None,
             # Retry on errors up to 5 times
             json_resp = None
             retry_attempts = 5
-            while json_resp is None and retry_attempts >= 1:
+            while json_resp is None:
                 try:                    
                     resp.raise_for_status()         
                     json_resp = await resp.json()
@@ -66,8 +66,10 @@ async def gather_responses(request_urls, api_args_dict):
     """
     tasks = get_tasks(request_urls, api_args_dict)
     print(f"Preparing {len(tasks)} URL(s)...")
+    
     responses = await asyncio.gather(*tasks)
     print(f"{len(responses)}/{len(tasks)} URLs processed successfully.")
+    
     return responses
 
 
@@ -79,6 +81,7 @@ def get_tasks(request_urls, api_args_dict):
     for url in request_urls:
         api_args_dict['url'] = url
         tasks.append(get_response(**api_args_dict))
+        
     return tasks
 
 
