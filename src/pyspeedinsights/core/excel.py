@@ -51,7 +51,7 @@ class ExcelWorkbook:
             elif results == self.metrics_results:
                 if is_first:
                     self.worksheet.write(row, col, k, column_format)
-                self.worksheet.write(row + 1, col, 'Value', column_format)
+                    self.worksheet.write(row + 1, col, 'Value', column_format)
                 self.worksheet.write(row + 2, col, v, data_format)
                 col += 1
         
