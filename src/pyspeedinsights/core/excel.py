@@ -9,8 +9,9 @@ class ExcelWorkbook:
         self.audit_results = audit_results
         self.metrics_results = metrics_results
         self.workbook = None
-        self.worksheet = None        
+        self.worksheet = None
         self.cur_cell = None
+        self.category_scores = []
     
     def _create_workbook(self):
         strategy = self.metadata['strategy']
@@ -27,6 +28,13 @@ class ExcelWorkbook:
         
         column_format = self._column_format()
         data_format = self._data_format()
+        
+        if results == self.audit_results:
+            category_score = self.metadata['category_score'] * 100
+            cat_score_format = self._score_format(category_score)
+            self.worksheet.write(row + 2, col - 1, category_score, cat_score_format)
+            # Add category score to list for averaging at end
+            self.category_scores.append(category_score)
                 
         for k, v in results.items():
             self.worksheet.set_column(col, col + 1, 15)
@@ -113,10 +121,9 @@ class ExcelWorkbook:
         metadata_format = self._metadata_format()
         
         # Add metadata to the first cell of the Excel sheet
-        category = self.metadata['category'].upper()
-        category_score = self.metadata['category_score'] * 100
+        category = self.metadata['category'].upper()        
         strategy = self.metadata['strategy'].upper()
-        metadata_value = f"{strategy} {category} REPORT - SCORE: {str(category_score)}"        
+        metadata_value = f"{strategy} {category} REPORT"        
         self.worksheet.write(0, 0, metadata_value, metadata_format)
         
         # Add URL header with a wider column of merged cells
@@ -124,14 +131,17 @@ class ExcelWorkbook:
         self.worksheet.set_column(col, col + 1, 15)
         self.worksheet.merge_range(row, col, row, col + 4, 'URL', column_format)
         
+        # Create a column for overall category score
+        self.worksheet.write(row, col + 5, 'Ovr', column_format)
+        
         # Set the current cell in row-col format for use later
-        self.cur_cell = [2, 4]
+        self.cur_cell = [2, 5]
         
     def write_to_worksheet(self, is_first):
         if self.worksheet is not None:
             url_format = self._url_format()
             self.worksheet.merge_range(
-                self.cur_cell[0] + 2, 0, self.cur_cell[0] + 2, self.cur_cell[1], self.url, url_format
+                self.cur_cell[0] + 2, 0, self.cur_cell[0] + 2, self.cur_cell[1] - 1, self.url, url_format
             )
             
             results = [r for r in [self.audit_results, self.metrics_results] if r is not None]
@@ -140,4 +150,16 @@ class ExcelWorkbook:
                 new_pos = self._write_results(result, is_first, row=row, col=col)
                 self.cur_cell = new_pos
             self.cur_cell[0] += 1
-            self.cur_cell[1] = 4
+            self.cur_cell[1] = 5
+            
+    def finalize_and_save(self):
+        # Write average scores next to worksheet metadata
+        scores = self.category_scores
+        avg_score = sum(scores) / len(scores)
+        avg_score = round(avg_score, 2)
+        format = self._metadata_format()
+        self.worksheet.write(0, 4, f'Avg Score: {avg_score}', format)
+        
+        # Close workbook to save the Excel sheet
+        self.workbook.close()
+        print("Workbook saved. Check your current directory!")

@@ -38,7 +38,7 @@ def main():
         request_urls = parse_sitemap(sitemap)
     else:
         request_urls = [url]
-    
+        
     # Run async requests and await responses    
     responses = asyncio.run(gather_responses(request_urls, api_args_dict))
     
@@ -69,5 +69,4 @@ def main():
     
     if format in ['excel', 'sitemap']:
         # Close workbook to save the Excel sheet
-        workbook.workbook.close()
-        print("Workbook saved. Check your current directory!")
+        workbook.finalize_and_save()
