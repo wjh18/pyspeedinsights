@@ -1,6 +1,6 @@
 import argparse
 
-from ..conf.data import COMMAND_CHOICES
+from .choices import COMMAND_CHOICES
 
 
 def parse_args():

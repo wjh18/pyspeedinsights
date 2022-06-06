@@ -1,6 +1,6 @@
 import asyncio
 
-from pyspeedinsights.core.commands import parse_args
+from pyspeedinsights.cli.commands import parse_args
 from pyspeedinsights.api.request import gather_responses
 from pyspeedinsights.api.response import process_response
 from pyspeedinsights.core.excel import ExcelWorkbook

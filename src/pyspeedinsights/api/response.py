@@ -2,7 +2,7 @@ import json
 import copy
 from datetime import datetime
 
-from ..conf.data import COMMAND_CHOICES
+from ..cli.choices import COMMAND_CHOICES
 
 
 def process_response(response, category='performance', strategy='desktop', 
