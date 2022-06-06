@@ -1,10 +1,10 @@
-import xml.etree.ElementTree as ET
-from urllib.parse import urlsplit
 from os.path import splitext
+from urllib.parse import urlsplit
+import xml.etree.ElementTree as ET
 
 import requests
 
-from pyspeedinsights.utils.urls import validate_url
+from ..utils.urls import validate_url
 
 
 def request_sitemap(url):

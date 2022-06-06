@@ -1,10 +1,10 @@
 import asyncio
 
-from pyspeedinsights.cli import commands
-from pyspeedinsights.api.request import gather_responses
-from pyspeedinsights.api.response import process_response
-from pyspeedinsights.core.excel import ExcelWorkbook
-from pyspeedinsights.core.sitemap import request_sitemap, parse_sitemap
+from .api.request import gather_responses
+from .api.response import process_response
+from .cli import commands
+from .core.excel import ExcelWorkbook
+from .core.sitemap import request_sitemap, parse_sitemap
 
 
 def main():

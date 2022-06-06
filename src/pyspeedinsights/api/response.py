@@ -1,20 +1,12 @@
-import json
 import copy
 from datetime import datetime
+import json
 
 from ..cli.choices import COMMAND_CHOICES
 
 
 def process_response(response, category='performance', strategy='desktop', 
                      format="json", metrics=None):
-    """
-    Called from main program to process API responses.
-    """
-    results = _to_format(response, category, strategy, format, metrics)
-    return results
-
-
-def _to_format(response, category, strategy, format, metrics):
     """
     Process API responses based on the format chosen by the user.
     """

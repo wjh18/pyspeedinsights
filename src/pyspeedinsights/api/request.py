@@ -1,8 +1,8 @@
 import aiohttp
 import asyncio
 
-from pyspeedinsights.utils.urls import validate_url
 from .keys import get_api_key
+from ..utils.urls import validate_url
 
 
 next_delay = 1 # Global for delays between requests

@@ -1,3 +1,4 @@
+
 # Limit cmd line arg choices based on API query param options.
 COMMAND_CHOICES = {
     'category': [
