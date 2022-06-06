@@ -1,17 +1,21 @@
+from dataclasses import dataclass, field
+
 import xlsxwriter
 
 
+@dataclass
 class ExcelWorkbook:
-    
-    def __init__(self, url, metadata, audit_results, metrics_results=None):
-        self.url = url
-        self.metadata = metadata
-        self.audit_results = audit_results
-        self.metrics_results = metrics_results
-        self.workbook = None
-        self.worksheet = None
-        self.cur_cell = None
-        self.category_scores = []
+    """
+    Class for creating and writing PSI API results to an Excel Workbook.
+    """
+    url: str
+    metadata: dict
+    audit_results: dict
+    metrics_results: dict = None
+    workbook: xlsxwriter.Workbook = None
+    worksheet: xlsxwriter.Workbook.worksheet_class = None
+    cur_cell: list[int] = None
+    category_scores: list[int] = field(default_factory=list)
     
     def _create_workbook(self):
         strategy = self.metadata['strategy']
