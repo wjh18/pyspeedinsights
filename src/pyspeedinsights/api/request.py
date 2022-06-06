@@ -1,8 +1,9 @@
 import aiohttp
 import asyncio
-from urllib.parse import urlsplit
 
 import keyring
+
+from pyspeedinsights.utils.urls import validate_url
 
 
 next_delay = 1 # Global for delays between requests
@@ -89,20 +90,3 @@ def get_tasks(request_urls, api_args_dict):
         tasks.append(get_response(**api_args_dict))
         
     return tasks
-
-
-def validate_url(url):
-    """
-    Adds a scheme to the URL if missing and
-    validates that the URL is fully qualified (not just a path).
-    """
-    err = "Invalid URL. Please enter a valid Fully-Qualified Domain Name (FQDN)."
-    try:
-        u = urlsplit(url)
-        if not (u.scheme and u.netloc):
-            if "." not in u.path:
-                raise SystemExit(err)
-            u = u._replace(scheme='https', netloc=u.path, path='')
-        return u.geturl()
-    except:
-        raise SystemExit(err)

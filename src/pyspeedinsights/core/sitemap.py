@@ -4,7 +4,7 @@ from os.path import splitext
 
 import requests
 
-from pyspeedinsights.api.request import validate_url
+from pyspeedinsights.utils.urls import validate_url
 
 
 def request_sitemap(url):
