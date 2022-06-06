@@ -41,6 +41,8 @@ def main():
         sitemap_url = url
         sitemap = request_sitemap(sitemap_url)
         request_urls = parse_sitemap(sitemap)
+        # Remove duplicates if they exist.
+        request_urls = list(set(request_urls))
     else:
         # For single page, only process that 1 URL.
         request_urls = [url]
