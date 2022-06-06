@@ -3,24 +3,28 @@ import argparse
 from .choices import COMMAND_CHOICES
 
 
-def parse_args():
+def setup_arg_parser():
     """
-    Parse command line arguments as parameters for the request.
+    Setup argument parser with grouped command line arguments
+    for request parameters and the processing of responses.
     """
     parser = argparse.ArgumentParser(prog='pyspeedinsights')
     
-    # Add argument options for default API call query params
+    # Add argument options for default API call query params.
     api_group = parser.add_argument_group('API Group')
+    
     api_group.add_argument(
         "url", help="The URL or Sitemap URL of the site you want to analyze.")
     api_group.add_argument(
         "-c", "--category", metavar="\b", dest="category",
         choices=COMMAND_CHOICES['category'],
-        help="The Lighthouse category to run: accessibility, best-practices, performance (default), pwa or seo.")
+        help="The Lighthouse category to run:\
+            accessibility, best-practices, performance (default), pwa or seo.")
     api_group.add_argument(
         "-l", "--locale", metavar="\b", dest="locale",
         choices=COMMAND_CHOICES['locale'],
-        help="The locale used to localize formatted results. Defaults to English (US).")
+        help="The locale used to localize formatted results.\
+            Defaults to English (US).")
     api_group.add_argument(
         "-s", "--strategy", metavar="\b", dest="strategy",
         choices=COMMAND_CHOICES['strategy'],
@@ -35,32 +39,50 @@ def parse_args():
         "-t", "--token", metavar="\b", dest="captcha_token",                    
         help="The captcha token passed when filling out a captcha.")
     
-    # Add other argument options for how to process the API response
+    # Add other argument options for how to process the API response.
     proc_group = parser.add_argument_group('Processing Group')
+    
     proc_group.add_argument(
         "-f", "--format", metavar="\b", dest="format",
         choices=COMMAND_CHOICES['format'],
         help="The format of the results: json (default), excel or sitemap.\
             json outputs all response data to a json file (1 URL at a time).\
-            excel writes Lighthouse audits and (optionally) metrics to an Excel file (1 URL at a time).\
-            sitemap parses the sitemap URL you provide and collects data for all your pages to Excel."
+            excel writes Lighthouse audits and (optionally) metrics\
+                to an Excel file (1 URL at a time).\
+            sitemap parses the sitemap URL you provide and\
+                collects data for all your pages to Excel."
     )
     proc_group.add_argument(
         "-m", "--metrics", metavar="\b", dest="metrics",
         choices=COMMAND_CHOICES['metrics'], nargs="+",
         help="The additional metric(s) to include in your report.\
             For Excel format only (the json output includes all metrics).\
-            If excluded, only the default Lighthouse audits will be saved to Excel.\
+            If excluded, only the default Lighthouse audits\
+                will be saved to Excel.\
             Add the `all` argument to retrieve all available metrics."
     )
     
+    return parser
+
+
+def parse_args(parser):
+    """
+    Parse arguments from the command line with `psi`.
+    """
     args = parser.parse_args()
+    return args
+
+
+def create_arg_groups(parser, args):
+    """
+    Create namespaces for each arg group to pass as kwargs later.
+    """
+    arg_groups = {}
     
-    arg_groups={}
-    # Create separate namespaces for each arg group so they can easily
-    # be passed to their respective classes as kwargs
     for group in parser._action_groups:
-        group_dict={a.dest:getattr(args,a.dest,None) for a in group._group_actions}
-        arg_groups[group.title]=argparse.Namespace(**group_dict)
+        group_dict = {
+            a.dest:getattr(args, a.dest, None) for a in group._group_actions
+        }
+        arg_groups[group.title] = argparse.Namespace(**group_dict)
     
     return arg_groups
