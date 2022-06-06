@@ -64,7 +64,7 @@ async def gather_responses(request_urls, api_args_dict):
     print(f"Preparing {len(tasks)} URL(s)...")
     
     responses = await asyncio.gather(*tasks)
-    print(f"{len(responses)}/{len(tasks)} URLs processed successfully.")
+    print(f"{len(responses)}/{len(tasks)} URL(s) processed successfully.")
     
     return responses
 

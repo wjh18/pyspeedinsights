@@ -3,33 +3,21 @@ from datetime import datetime
 import json
 
 from ..cli.choices import COMMAND_CHOICES
-
-
-def process_response(response, category='performance', strategy='desktop', 
-                     format="json", metrics=None):
-    """
-    Process API responses based on the format chosen by the user.
-    """
-    json_resp = response
-    
-    if format == "json":
-        _process_json(json_resp, category, strategy)
-    elif format in ["excel", "sitemap"]:
-        results = _process_excel(json_resp, category, metrics)
-        return results
         
 
-def _process_json(json_resp, category, strategy):
+def process_json(json_resp, category, strategy):
     """
     Dump raw json to a file at the root.
     """
     date = _get_timestamp(json_resp)
-    with open(f'psi-s-{strategy}-c-{category}-{date}.json', 'w', encoding='utf-8') as f:
+    filename = f'psi-s-{strategy}-c-{category}-{date}.json'
+    
+    with open(filename, 'w', encoding='utf-8') as f:
         json.dump(json_resp, f, ensure_ascii=False, indent=4)
         print("JSON processed. Check your current directory.")
 
 
-def _process_excel(json_resp, category, metrics):
+def process_excel(json_resp, category, metrics):
     """
     Call various processing functions for Excel or Sitemap formats.
     """
@@ -76,29 +64,28 @@ def _parse_audits(audits_base):
     """
     Parse Lighthouse audits from json response for writing to Excel sheet.
     """
-    results = {}
-    audits = audits_base    
+    audit_results = {}
     
     # Create results dict with scores and numerical values for each audit.
-    for k in audits.keys():
-        score = audits[k].get('score')
+    for k in audits_base.keys():
+        score = audits_base[k].get('score')
         if score is not None:
-            num_value = audits[k].get('numericValue', 'n/a')
-            results[k] = [score*100, num_value]
+            num_value = audits_base[k].get('numericValue', 'n/a')
+            audit_results[k] = [score*100, num_value]
         else:
-            results[k] = ['n/a', 'n/a']
+            audit_results[k] = ['n/a', 'n/a']
             
     # Sort dict alphabetically so each audit is written to Excel in order
-    results = dict(sorted(results.items()))
+    audit_results = dict(sorted(audit_results.items()))
         
-    return results
+    return audit_results
 
 
 def _parse_metrics(audits_base, metrics):
     """
     Parse performance metrics from json response for writing to Excel sheet.
     """
-    results = {}
+    metrics_results = {}
     metrics_loc = audits_base["metrics"]["details"]["items"][0]
     
     if "all" in metrics:
@@ -111,12 +98,12 @@ def _parse_metrics(audits_base, metrics):
     # Create new dict of metrics based on user's chosen metrics    
     for field in metrics_to_use:
         metric = metrics_loc[field]
-        results[field] = metric
+        metrics_results[field] = metric
         
     # Sort dict alphabetically so each metric is written to Excel in order
-    results = dict(sorted(results.items()))
+    metrics_results = dict(sorted(metrics_results.items()))
         
-    return results
+    return metrics_results
 
 
 def _get_audits_base(json_resp):

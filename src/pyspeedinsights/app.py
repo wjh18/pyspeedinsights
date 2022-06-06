@@ -1,7 +1,7 @@
 import asyncio
 
 from .api.request import gather_responses
-from .api.response import process_response
+from .api.response import process_json, process_excel
 from .cli import commands
 from .core.excel import ExcelWorkbook
 from .core.sitemap import request_sitemap, parse_sitemap
@@ -24,9 +24,11 @@ def main():
     proc_args_dict = {k: v for k, v in proc_args_dict.items() if v is not None}
     
     format = proc_args_dict.get('format')
+    metrics = proc_args_dict.get('metrics')
+    
+    url = api_args_dict.get('url')
     category = api_args_dict.get('category')
     strategy = api_args_dict.get('strategy')
-    url = api_args_dict.get('url')
     
     # API's default category and strategy with no query params.
     if category is None:
@@ -46,22 +48,31 @@ def main():
     # Run async requests and await responses    
     responses = asyncio.run(gather_responses(request_urls, api_args_dict))
     
+    json_output =  format == "json" or format is None
+    excel_output = format in ['excel', 'sitemap']
+    
     # Iterate through responses and write data to Excel.
     for i, response in enumerate(responses):
-        # Process the response based on cmd args
-        results = process_response(response, category, strategy, **proc_args_dict)
         
-        if format in ['excel', 'sitemap']:
-            metadata = results['metadata']
-            audit_results = results['audit_results']
-            metrics_results = results['metrics_results']
+        if json_output:
+            # Output raw JSON response to working directory.
+            process_json(response, category, strategy)
+            
+        elif excel_output:
+            # Parse metadata, audit and metrics results for Excel.
+            excel_results = process_excel(response, category, metrics)
+            
+            metadata = excel_results['metadata']
+            audit_results = excel_results['audit_results']
+            metrics_results = excel_results['metrics_results']
             final_url = response['lighthouseResult']['finalUrl']
             
             is_first = i == 0
             if is_first:
                 # Create and set up workbook on first iteration.
                 print("Creating Excel workbook...")
-                workbook = ExcelWorkbook(final_url, metadata, audit_results, metrics_results)
+                workbook = ExcelWorkbook(
+                    final_url, metadata, audit_results, metrics_results)
                 workbook.setup_worksheet()
             else:
                 # Simply update workbook attrs after first response.
@@ -72,7 +83,10 @@ def main():
                 
             # Write the results to Excel worksheet.
             workbook.write_to_worksheet(is_first)
+            
+        else:
+            raise ValueError("Invalid format specified. Please try again.")
     
-    if format in ['excel', 'sitemap']:
+    if excel_output:
         # Calculate avg score, close the workbook and save to Excel.
         workbook.finalize_and_save()
