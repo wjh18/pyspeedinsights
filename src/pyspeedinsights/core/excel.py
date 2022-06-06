@@ -17,59 +17,163 @@ class ExcelWorkbook:
     cur_cell: list[int] = None
     category_scores: list[int] = field(default_factory=list)
     
+    def set_up_worksheet(self):
+        """
+        Create workbook, add worksheet, and set up column headings.
+        """
+        self._create_workbook()
+        self.worksheet = self.workbook.add_worksheet()
+        
+        row, col = 0, 0 # First cell
+        column_format = self._column_format()
+        metadata_format = self._metadata_format()
+        
+        # Add metadata to the first cell of the Excel sheet.
+        category = self.metadata['category'].upper()
+        strategy = self.metadata['strategy'].upper()
+        metadata_value = f'{strategy} {category} REPORT'
+        self.worksheet.write(row, col, metadata_value, metadata_format)
+        
+        # Add URL heading with a wider column of merged cells.
+        row += 2
+        col += 1
+        self.worksheet.set_column(col, col, 15)
+        self.worksheet.merge_range(row, col, row, col + 3, 'URL', column_format)
+        
+        # Add a column heading for each page's overall category score.
+        col += 4
+        self.worksheet.write(row, col, 'Ovr', column_format)
+        
+        # Set the current cell as row, col for use later.
+        self.cur_cell = [row, col]
+        
+    def write_to_worksheet(self, is_first):
+        """
+        Write URL, overall page score and metrics to sheet.
+        """
+        if self.worksheet is not None:
+            # Write results to Excel sheet.
+            self._write_page_url()
+            self._write_overall_category_score()
+            self._write_audit_results(self.audit_results, is_first)
+            
+            if self.metrics_results is not None:
+                self._write_metrics_results(self.metrics_results, is_first)
+            
+            # Move one row down for next page and reset column.
+            self.cur_cell[0] += 1
+            self.cur_cell[1] = 5
+        else:
+            raise ValueError("The worksheet is not set up. ")
+        
+    def finalize_and_save(self):
+        """
+        Write the average score to the workbook and save/close it.
+        """
+        self._write_average_score()
+        
+        self.workbook.close()
+        print("Workbook saved. Check your current directory!")
+    
     def _create_workbook(self):
+        """Create Excel workbook with a unique and descriptive name."""
         strategy = self.metadata['strategy']
-        category = self.metadata['category']        
+        category = self.metadata['category']
         date = self.metadata['timestamp']
         
         self.workbook = xlsxwriter.Workbook(
             f'psi-s-{strategy}-c-{category}-{date}.xlsx')
         
-    def _write_metadata(self):
-        pass
+    def _write_overall_category_score(self):
+        """Write ovr category score for the URL to the sheet."""
+        category_score = self.metadata['category_score'] * 100
+        cat_score_format = self._score_format(category_score)
         
-    def _write_results(self, results, is_first, row=0, col=1):
+        self.worksheet.write(
+            self.cur_cell[0] + 2, self.cur_cell[1],
+            category_score, cat_score_format)
         
+        self.cur_cell[1] += 2
+        
+        # Add category score to list for averaging at the end.
+        self.category_scores.append(category_score)
+        
+    def _write_average_score(self):
+        """Write average score next to worksheet metadata."""
+        scores = self.category_scores
+        avg_score = sum(scores) / len(scores)
+        avg_score = round(avg_score, 2)
+        
+        format = self._metadata_format()
+        self.worksheet.write(0, 4, f'Avg Score: {avg_score}', format)
+        
+    def _write_page_url(self):
+        """
+        Write page URL under analysis to sheet.
+        
+        Current cell: Row 2, Column 5
+        """
+        url_format = self._url_format()
+        
+        row = self.cur_cell[0] + 2
+        
+        self.worksheet.merge_range(
+            row, 0, row, self.cur_cell[1] - 1, 
+            self.url, url_format)
+    
+    def _write_audit_results(self, audit_results, is_first):
+        """
+        Iterate through audit results and write to Excel worksheet.
+        """
         column_format = self._column_format()
-        data_format = self._data_format()
+        row, col = self.cur_cell[0], self.cur_cell[1]
         
-        if results == self.audit_results:
-            category_score = self.metadata['category_score'] * 100
-            cat_score_format = self._score_format(category_score)
-            self.worksheet.write(row + 2, col - 1, category_score, cat_score_format)
-            # Add category score to list for averaging at end
-            self.category_scores.append(category_score)
-                
-        for k, v in results.items():
+        for k, v in audit_results.items():
             self.worksheet.set_column(col, col + 1, 15)
             
-            if results == self.audit_results:
-                score = v[0]
-                value = v[1]
-                score_format = self._score_format(score)
-                
-                if is_first:
-                    self.worksheet.merge_range(row, col, row, col + 1, k, column_format)
-                    self.worksheet.write(row + 1, col, 'Score', column_format)
-                    self.worksheet.write(row + 1, col + 1, 'Value', column_format)
-                self.worksheet.write(row + 2, col, score, score_format)
-                self.worksheet.write(row + 2, col + 1, value, score_format)
-                
-                if k == list(results.keys())[-1]:
-                    col += 3
-                else:
-                    col += 2
-                
-            elif results == self.metrics_results:
-                if is_first:
-                    self.worksheet.write(row, col, k, column_format)
-                    self.worksheet.write(row + 1, col, 'Value', column_format)
-                self.worksheet.write(row + 2, col, v, data_format)
-                col += 1
+            score = v[0]
+            value = v[1]
+            score_format = self._score_format(score)
+            
+            if is_first:
+                self._write_results_headings(row, col, k, column_format, result_type='audit')
+            self.worksheet.write(row + 2, col, score, score_format)
+            self.worksheet.write(row + 2, col + 1, value, score_format)
+          
+            col += 2
         
-        return [row, col]
-    
+        self.cur_cell[1] = col + 2
+                   
+    def _write_metrics_results(self, metrics_results, is_first):
+        """
+        Iterate through metrics results and write to Excel worksheet.
+        """
+        column_format = self._column_format()
+        data_format = self._data_format()
+        row, col = self.cur_cell[0], self.cur_cell[1]
+        
+        for k, v in metrics_results.items():
+            self.worksheet.set_column(col, col, 30)
+            
+            if is_first:
+                self._write_results_headings(row, col, k, column_format, result_type='metrics')
+            self.worksheet.write(row + 2, col, v, data_format)
+            col += 1
+            
+    def _write_results_headings(self, row, col, k, column_format, result_type):
+        """
+        Write headings for audit or metrics results to worksheet.
+        """
+        if result_type == 'audit':
+            self.worksheet.merge_range(row, col, row, col + 1, k, column_format)
+            self.worksheet.write(row + 1, col, 'Score', column_format)
+            self.worksheet.write(row + 1, col + 1, 'Value', column_format)
+        elif result_type == 'metrics':
+            self.worksheet.write(row, col, k, column_format)
+            self.worksheet.write(row + 1, col, 'Value', column_format)
+        
     def _column_format(self):
+        """Reusable formatting for column cells."""
         return self.workbook.add_format({
             'font_size': 16,
             'bold': 1,
@@ -77,18 +181,21 @@ class ExcelWorkbook:
             'valign': 'vcenter'})
     
     def _data_format(self):
+        """Reusable formatting for cells with regular data."""
         return self.workbook.add_format({
             'font_size': 14,
             'align': 'center',
             'valign': 'vcenter'})
     
     def _url_format(self):
+        """Reusable formatting for cells with URLs."""
         return self.workbook.add_format({
             'font_size': 14,
             'align': 'left',
             'valign': 'vcenter'})
         
     def _metadata_format(self):
+        """Reusable formatting for cells with metadata."""
         return self.workbook.add_format({
             'font_size': 20,
             'bold': 1,
@@ -96,6 +203,9 @@ class ExcelWorkbook:
             'valign': 'vcenter'})
         
     def _score_format(self, score):
+        """
+        Reusable formatting and color coding for cells with scores.
+        """
         if score == 'n/a':
             color = 'white'
         elif score >= 90:
@@ -116,54 +226,3 @@ class ExcelWorkbook:
             'font_size': 14,
             'align': 'center',
             'valign': 'vcenter'})
-        
-    def setup_worksheet(self):
-        self._create_workbook()
-        self.worksheet = self.workbook.add_worksheet()
-        
-        column_format = self._column_format()        
-        metadata_format = self._metadata_format()
-        
-        # Add metadata to the first cell of the Excel sheet
-        category = self.metadata['category'].upper()        
-        strategy = self.metadata['strategy'].upper()
-        metadata_value = f"{strategy} {category} REPORT"        
-        self.worksheet.write(0, 0, metadata_value, metadata_format)
-        
-        # Add URL header with a wider column of merged cells
-        row, col = 2, 0
-        self.worksheet.set_column(col, col + 1, 15)
-        self.worksheet.merge_range(row, col, row, col + 4, 'URL', column_format)
-        
-        # Create a column for overall category score
-        self.worksheet.write(row, col + 5, 'Ovr', column_format)
-        
-        # Set the current cell in row-col format for use later
-        self.cur_cell = [2, 5]
-        
-    def write_to_worksheet(self, is_first):
-        if self.worksheet is not None:
-            url_format = self._url_format()
-            self.worksheet.merge_range(
-                self.cur_cell[0] + 2, 0, self.cur_cell[0] + 2, self.cur_cell[1] - 1, self.url, url_format
-            )
-            
-            results = [r for r in [self.audit_results, self.metrics_results] if r is not None]
-            for result in results:
-                row, col = self.cur_cell[0], self.cur_cell[1] + 1
-                new_pos = self._write_results(result, is_first, row=row, col=col)
-                self.cur_cell = new_pos
-            self.cur_cell[0] += 1
-            self.cur_cell[1] = 5
-            
-    def finalize_and_save(self):
-        # Write average scores next to worksheet metadata
-        scores = self.category_scores
-        avg_score = sum(scores) / len(scores)
-        avg_score = round(avg_score, 2)
-        format = self._metadata_format()
-        self.worksheet.write(0, 4, f'Avg Score: {avg_score}', format)
-        
-        # Close workbook to save the Excel sheet
-        self.workbook.close()
-        print("Workbook saved. Check your current directory!")

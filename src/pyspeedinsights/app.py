@@ -73,7 +73,7 @@ def main():
                 print("Creating Excel workbook...")
                 workbook = ExcelWorkbook(
                     final_url, metadata, audit_results, metrics_results)
-                workbook.setup_worksheet()
+                workbook.set_up_worksheet()
             else:
                 # Simply update workbook attrs after first response.
                 workbook.url = final_url
