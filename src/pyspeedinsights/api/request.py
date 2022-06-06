@@ -5,13 +5,16 @@ from urllib.parse import urlsplit
 import keyring
 
 
-next_delay = 1
+next_delay = 1 # Global for delays between requests
+
 
 async def get_response(url, category=None, locale=None, strategy=None, 
              utm_campaign=None, utm_source=None, captcha_token=None):
     """
     Make async calls to PSI API for each site URL and return the response.
     """
+    # Validate URL, set query params and base URL. Remove None values
+    # to use API defaults instead of passing them explicity as params.
     url = validate_url(url)
     params = {
         'url': url, 'category': category, 'locale': locale,
@@ -21,27 +24,30 @@ async def get_response(url, category=None, locale=None, strategy=None,
     params = {k: v for k, v in params.items() if v is not None}
     base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     
-    # Get API key from keystore with keyring
+    # Get API key from keystore with keyring and exit if not set.
     PSI_API_KEY = keyring.get_password("system", "psikey")
     if PSI_API_KEY is not None:
         params['key'] = PSI_API_KEY
     else:
         err = "Error: Your PageSpeed Insights API key is empty.\
-              \nGenerate a key with Google and set it with the command `keyring set system psikey`.\
-              \nTo verify your key can be found, run the command `keyring get system psikey`."
+              \nGenerate a key with Google and set it with the command\
+                  `keyring set system psikey`.\
+              \nTo verify your key can be found, run the command\
+                  `keyring get system psikey`."
         raise SystemExit(err)
     
-    # Add a delay between tasks to avoid 500 errors from server
+    # Add a 1s delay between task calls to avoid 500 errors from server.
     global next_delay
     next_delay += 1
     await asyncio.sleep(next_delay)
     
     print(f"Sending request... ({params['url']})")
     
+    # Make async call with query params to PSI API and await response.
     async with aiohttp.ClientSession() as session:
         async with session.get(url=base_url, params=params) as resp:
     
-            # Retry on errors up to 5 times
+            # Retry on errors up to 5 times and sleep for 1s.
             json_resp = None
             retry_attempts = 5
             while json_resp is None:
@@ -51,7 +57,7 @@ async def get_response(url, category=None, locale=None, strategy=None,
                     print(f"Request successful! ({params['url']})")
                 except aiohttp.ClientError as err_c:                    
                     if retry_attempts < 1:
-                        raise SystemExit(err_c)
+                        raise aiohttp.ClientError(err_c)
                     else:
                         print(err_c)
                         retry_attempts -= 1
@@ -87,15 +93,15 @@ def get_tasks(request_urls, api_args_dict):
 
 def validate_url(url):
     """
-    Adds a scheme to the URL if missing.
-    Validates that the URL is fully qualified and not just a path.
+    Adds a scheme to the URL if missing and
+    validates that the URL is fully qualified (not just a path).
     """
     err = "Invalid URL. Please enter a valid Fully-Qualified Domain Name (FQDN)."
     try:
         u = urlsplit(url)
         if not (u.scheme and u.netloc):
             if "." not in u.path:
-                raise SystemError(err)
+                raise SystemExit(err)
             u = u._replace(scheme='https', netloc=u.path, path='')
         return u.geturl()
     except:

@@ -1,3 +1,4 @@
+# Limit cmd line arg choices based on API query param options.
 COMMAND_CHOICES = {
     'category': [
         'accessibility', 'best-practices', 
@@ -15,6 +16,7 @@ COMMAND_CHOICES = {
     'format': [
         'json', 'excel', 'sitemap'
     ],
+    # `all` is used as an arg to include all metrics in the Excel output
     'metrics': [
         "all",
         "observedTotalCumulativeLayoutShift",
