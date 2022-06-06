@@ -1,9 +1,8 @@
 import aiohttp
 import asyncio
 
-import keyring
-
 from pyspeedinsights.utils.urls import validate_url
+from .keys import get_api_key
 
 
 next_delay = 1 # Global for delays between requests
@@ -25,17 +24,7 @@ async def get_response(url, category=None, locale=None, strategy=None,
     params = {k: v for k, v in params.items() if v is not None}
     base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     
-    # Get API key from keystore with keyring and exit if not set.
-    PSI_API_KEY = keyring.get_password("system", "psikey")
-    if PSI_API_KEY is not None:
-        params['key'] = PSI_API_KEY
-    else:
-        err = "Error: Your PageSpeed Insights API key is empty.\
-              \nGenerate a key with Google and set it with the command\
-                  `keyring set system psikey`.\
-              \nTo verify your key can be found, run the command\
-                  `keyring get system psikey`."
-        raise SystemExit(err)
+    params['key'] = get_api_key()
     
     # Add a 1s delay between task calls to avoid 500 errors from server.
     global next_delay
