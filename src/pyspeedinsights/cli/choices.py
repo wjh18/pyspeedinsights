@@ -5,28 +5,57 @@ Define argpase command line argument choices.
 
 'format' is specific to pyspeedinsights and dictates the output format of the results.
 
-'metrics' defines available performance metrics to include, with 'all' denoting all metrics.
+'metrics' defines available performance metrics to include. 'all' = collect all metrics.
 """
 
 COMMAND_CHOICES = {
-    'category': [
-        'accessibility', 'best-practices', 
-        'performance', 'pwa', 'seo'
+    "category": ["accessibility", "best-practices", "performance", "pwa", "seo"],
+    "strategy": ["desktop", "mobile"],
+    "locale": [
+        "ar",
+        "bg",
+        "ca",
+        "zh-TW",
+        "zh-CN",
+        "hr",
+        "cs",
+        "da",
+        "nl",
+        "en",
+        "en-GB",
+        "fil",
+        "fi",
+        "fr",
+        "de",
+        "el",
+        "iw",
+        "hi",
+        "hu",
+        "id",
+        "it",
+        "ja",
+        "ko",
+        "lv",
+        "lt",
+        "no",
+        "pl",
+        "pt-BR",
+        "pt-PT",
+        "ro",
+        "ru",
+        "sr",
+        "sk",
+        "sl",
+        "es",
+        "sv",
+        "th",
+        "tr",
+        "uk",
+        "vi",
     ],
-    'strategy': [
-        'desktop', 'mobile'
-    ],
-    'locale': [
-        'ar', 'bg', 'ca', 'zh-TW', 'zh-CN', 'hr', 'cs', 'da', 'nl',
-        'en', 'en-GB', 'fil', 'fi', 'fr', 'de', 'el', 'iw', 'hi', 'hu',
-        'id', 'it', 'ja', 'ko', 'lv', 'lt', 'no', 'pl', 'pt-BR', 'pt-PT',
-        'ro', 'ru', 'sr', 'sk', 'sl', 'es', 'sv', 'th', 'tr', 'uk', 'vi',
-    ],
-    'format': [
-        'json', 'excel', 'sitemap'
-    ],
+    "format": ["json", "excel", "sitemap"],
     # `all` is used as an arg to include all metrics in the Excel output
-    'metrics': [
+    "metrics": [
         "all",
         "observedTotalCumulativeLayoutShift",
         "observedCumulativeLayoutShift",
@@ -68,6 +97,6 @@ COMMAND_CHOICES = {
         "observedDomContentLoadedTs",
         "observedSpeedIndex",
         "firstMeaningfulPaint",
-        "observedLargestContentfulPaintTs"
-    ]
+        "observedLargestContentfulPaintTs",
+    ],
 }
