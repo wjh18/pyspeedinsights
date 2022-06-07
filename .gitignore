@@ -5,6 +5,7 @@ __pycache__/
 src/*.egg-info
 .venv
 .pytest_cache
+.coverage
 
 # Mac/OSX
 .DS_Store
