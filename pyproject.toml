@@ -9,3 +9,8 @@ testpaths = "tests"
 
 [tool.isort]
 profile = "black"
+known_first_party = "pyspeedinsights"
+known_local_folder = "pyspeedinsights"
+
+[tool.black]
+target-version = ['py39']
