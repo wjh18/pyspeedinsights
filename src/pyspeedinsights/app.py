@@ -9,10 +9,12 @@ from .core.sitemap import request_sitemap, parse_sitemap
 
 def main():
     """
-    Main entry point when initialized from the cmd line with `psi`.
+    Main execution loop of the program.
+    
+    Run with `psi` console script entry point or when invoking the module directly.
     """
-    # Setup / parse cmd line args into groups.
-    parser = commands.setup_arg_parser()
+    # Set up arg parser and parse cmd line args into groups.
+    parser = commands.set_up_arg_parser()
     args = commands.parse_args(parser)
     arg_groups = commands.create_arg_groups(parser, args)
     
@@ -40,24 +42,23 @@ def main():
         # Create list of request URLs based on sitemap.
         sitemap_url = url
         sitemap = request_sitemap(sitemap_url)
-        request_urls = parse_sitemap(sitemap)
-        # Remove duplicates if they exist.
-        request_urls = list(set(request_urls))
+        request_urls = parse_sitemap(sitemap)        
+        request_urls = list(set(request_urls)) # Remove duplicates if they exist.
     else:
-        # For single page, only process that 1 URL.
+        # For analyzing a single page, only process the requested URL.
         request_urls = [url]
         
-    # Run async requests and await responses    
+    # Make async requests to PSI API and gather responses.
     responses = asyncio.run(gather_responses(request_urls, api_args_dict))
     
     json_output =  format == "json" or format is None
     excel_output = format in ['excel', 'sitemap']
     
-    # Iterate through responses and write data to Excel.
+    # Process and write data for each response based on chosen format.
     for i, response in enumerate(responses):
         
         if json_output:
-            # Output raw JSON response to working directory.
+            # Output raw JSON response to the current directory.
             process_json(response, category, strategy)
             
         elif excel_output:
@@ -71,24 +72,24 @@ def main():
             
             is_first = i == 0
             if is_first:
-                # Create and set up workbook on first iteration.
+                # Create and set up the workbook on the first iteration.
                 print("Creating Excel workbook...")
                 workbook = ExcelWorkbook(
                     final_url, metadata, audit_results, metrics_results)
                 workbook.set_up_worksheet()
             else:
-                # Simply update workbook attrs after first response.
+                # Simply update the workbook attrs after the first response.
                 workbook.url = final_url
                 workbook.metadata = metadata
                 workbook.audit_results = audit_results
                 workbook.metrics_results = metrics_results
                 
-            # Write the results to Excel worksheet.
+            # Write the results to the Excel worksheet.
             workbook.write_to_worksheet(is_first)
             
         else:
             raise ValueError("Invalid format specified. Please try again.")
     
     if excel_output:
-        # Calculate avg score, close the workbook and save to Excel.
+        # Calculate the avg score, close the workbook and save the Excel file.
         workbook.finalize_and_save()

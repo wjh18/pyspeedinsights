@@ -3,8 +3,11 @@ import keyring
 
 def get_api_key():
     """
-    Get API key from keystore with keyring and exit if not set.
+    Get the user's PSI API key from their keystore using keyring.
+    
+    Exit the program if key is not set.
     """
+    
     PSI_API_KEY = keyring.get_password("system", "psikey")
     
     if PSI_API_KEY is not None:

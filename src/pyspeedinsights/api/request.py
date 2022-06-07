@@ -5,28 +5,30 @@ from .keys import get_api_key
 from ..utils.urls import validate_url
 
 
-next_delay = 1 # Global for delays between requests
+next_delay = 1 # Global for applying a 1s delay between requests
 
 
 async def get_response(url, category=None, locale=None, strategy=None, 
              utm_campaign=None, utm_source=None, captcha_token=None):
     """
-    Make async calls to PSI API for each site URL and return the response.
+    Make async GET calls to the PSI API for the requested page's URL.
+    
+    Return the awaited json response from the server.
     """
-    # Validate URL, set query params and base URL. Remove None values
-    # to use API defaults instead of passing them explicity as params.
+    
+    base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     url = validate_url(url)
     params = {
         'url': url, 'category': category, 'locale': locale,
         'strategy': strategy, 'utm_campaign': utm_campaign,
         'utm_source': utm_source, 'captcha_token': captcha_token
     }
-    params = {k: v for k, v in params.items() if v is not None}
-    base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
+    # Use API defaults instead of passing None values as query params.
+    params = {k: v for k, v in params.items() if v is not None}    
     
     params['key'] = get_api_key()
     
-    # Add a 1s delay between task calls to avoid 500 errors from server.
+    # Add a 1s delay between calls to avoid 500 errors from server.
     global next_delay
     next_delay += 1
     await asyncio.sleep(next_delay)
@@ -37,7 +39,7 @@ async def get_response(url, category=None, locale=None, strategy=None,
     async with aiohttp.ClientSession() as session:
         async with session.get(url=base_url, params=params) as resp:
     
-            # Retry on errors up to 5 times and sleep for 1s.
+            # Retry on errors up to 5 times. Sleep for 1s between retries.
             json_resp = None
             retry_attempts = 5
             while json_resp is None:
@@ -57,9 +59,8 @@ async def get_response(url, category=None, locale=None, strategy=None,
 
 
 async def gather_responses(request_urls, api_args_dict):
-    """
-    Gather tasks and await the return of the responses for processing.
-    """
+    """Gather tasks and await the return of the responses for processing."""
+    
     tasks = get_tasks(request_urls, api_args_dict)
     print(f"Preparing {len(tasks)} URL(s)...")
     
@@ -70,9 +71,8 @@ async def gather_responses(request_urls, api_args_dict):
 
 
 def get_tasks(request_urls, api_args_dict):
-    """
-    Create a list of tasks that call get_response() with request params.
-    """
+    """Create a list of tasks that call get_response() with request params."""
+    
     tasks = []
     for url in request_urls:
         api_args_dict['url'] = url

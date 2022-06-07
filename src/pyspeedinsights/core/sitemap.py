@@ -8,9 +8,8 @@ from ..utils.urls import validate_url
 
 
 def request_sitemap(url):
-    """
-    Get sitemap from URL provided in cmd args.
-    """
+    """Retrieve the sitemap from the URL provided in cmd args."""
+    
     url = validate_url(url)
     
     if validate_sitemap_url(url) != True:
@@ -36,9 +35,8 @@ def request_sitemap(url):
 
     
 def parse_sitemap(sitemap):
-    """
-    Parse URLs from XML sitemap and return a list of them.
-    """
+    """Parse URLs from the XML sitemap and return a list of URLs."""
+    
     print("Parsing URLs from sitemap...")
     
     root = ET.fromstring(sitemap)
@@ -53,9 +51,8 @@ def parse_sitemap(sitemap):
 
 
 def validate_sitemap_url(url):
-    """
-    Validate that the sitemap URL is in .xml format.
-    """
+    """Validate that the sitemap URL is valid (.xml format)."""
+    
     u = urlsplit(url)
     ext = splitext(u.path)[1]
     if ext == '.xml':

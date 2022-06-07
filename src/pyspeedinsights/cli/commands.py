@@ -3,11 +3,13 @@ import argparse
 from .choices import COMMAND_CHOICES
 
 
-def setup_arg_parser():
+def set_up_arg_parser():
     """
-    Setup argument parser with grouped command line arguments
-    for request parameters and the processing of responses.
+    Setup argument parser with grouped command line arguments.
+    
+    Used to define PSI API request query parameters and how responses are processed.
     """
+    
     parser = argparse.ArgumentParser(prog='pyspeedinsights')
     
     # Add argument options for default API call query params.
@@ -67,16 +69,22 @@ def setup_arg_parser():
 
 def parse_args(parser):
     """
-    Parse arguments from the command line with `psi`.
+    Parse user arguments from the command line.
+    
+    With `psi` console script entry point or when invoking the module directly.
     """
+    
     args = parser.parse_args()
     return args
 
 
 def create_arg_groups(parser, args):
     """
-    Create namespaces for each arg group to pass as kwargs later.
+    Create separate namespaces for each arg group.
+    
+    Necessary for passing each arg group separately as kwargs.
     """
+    
     arg_groups = {}
     
     for group in parser._action_groups:

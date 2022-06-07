@@ -1,5 +1,13 @@
+"""
+Define argpase command line argument choices.
 
-# Limit cmd line arg choices based on API query param options.
+'category', 'strategy' and 'locale' are all based on available PSI API query params.
+
+'format' is specific to pyspeedinsights and dictates the output format of the results.
+
+'metrics' defines available performance metrics to include, with 'all' denoting all metrics.
+"""
+
 COMMAND_CHOICES = {
     'category': [
         'accessibility', 'best-practices', 

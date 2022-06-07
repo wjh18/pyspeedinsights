@@ -5,9 +5,8 @@ import xlsxwriter
 
 @dataclass
 class ExcelWorkbook:
-    """
-    Class for creating and writing PSI API results to an Excel Workbook.
-    """
+    """Class for creating an Excel Workbook and writing the PSI API results to it."""
+    
     url: str
     metadata: dict
     audit_results: dict
@@ -18,9 +17,8 @@ class ExcelWorkbook:
     category_scores: list[int] = field(default_factory=list)
     
     def set_up_worksheet(self):
-        """
-        Create workbook, add worksheet, and set up column headings.
-        """
+        """Create the workbook, add a worksheet, and set up column headings."""
+        
         self._create_workbook()
         self.worksheet = self.workbook.add_worksheet()
         
@@ -34,7 +32,7 @@ class ExcelWorkbook:
         metadata_value = f'{strategy} {category} REPORT'
         self.worksheet.write(row, col, metadata_value, metadata_format)
         
-        # Add URL heading with a wider column of merged cells.
+        # Add the URL heading with a wider column of merged cells.
         row += 2
         col += 1
         self.worksheet.set_column(col, col, 15)
@@ -44,15 +42,14 @@ class ExcelWorkbook:
         col += 4
         self.worksheet.write(row, col, 'Ovr', column_format)
         
-        # Set the current cell as row, col for use later.
+        # Set the current cell in [row, col] format for later use.
         self.cur_cell = [row, col]
         
     def write_to_worksheet(self, is_first):
-        """
-        Write URL, overall page score and metrics to sheet.
-        """
+        """Write the URL, overall page score, audit and metrics results to the sheet."""
+        
         if self.worksheet is not None:
-            # Write results to Excel sheet.
+            # Write the results to the Excel sheet.
             self._write_page_url()
             self._write_overall_category_score()
             self._write_audit_results(self.audit_results, is_first)
@@ -60,23 +57,23 @@ class ExcelWorkbook:
             if self.metrics_results is not None:
                 self._write_metrics_results(self.metrics_results, is_first)
             
-            # Move one row down for next page and reset column.
+            # Move one row down for the next page and reset the column.
             self.cur_cell[0] += 1
             self.cur_cell[1] = 5
         else:
             raise ValueError("The worksheet is not set up. ")
         
     def finalize_and_save(self):
-        """
-        Write the average score to the workbook and save/close it.
-        """
+        """Write the average score to the workbook and save/close it."""
+        
         self._write_average_score()
         
         self.workbook.close()
         print("Workbook saved. Check your current directory!")
     
     def _create_workbook(self):
-        """Create Excel workbook with a unique and descriptive name."""
+        """Create an Excel workbook with a unique and descriptive name."""
+        
         strategy = self.metadata['strategy']
         category = self.metadata['category']
         date = self.metadata['timestamp']
@@ -85,7 +82,8 @@ class ExcelWorkbook:
             f'psi-s-{strategy}-c-{category}-{date}.xlsx')
         
     def _write_overall_category_score(self):
-        """Write ovr category score for the URL to the sheet."""
+        """Write the ovr category score for the page / URL to the sheet."""
+        
         category_score = self.metadata['category_score'] * 100
         cat_score_format = self._score_format(category_score)
         
@@ -95,11 +93,12 @@ class ExcelWorkbook:
         
         self.cur_cell[1] += 2
         
-        # Add category score to list for averaging at the end.
+        # Add the score to a list so they can all be averaged at the end.
         self.category_scores.append(category_score)
         
     def _write_average_score(self):
-        """Write average score next to worksheet metadata."""
+        """Write the average score next to the worksheet metadata."""
+        
         scores = self.category_scores
         avg_score = sum(scores) / len(scores)
         avg_score = round(avg_score, 2)
@@ -109,9 +108,9 @@ class ExcelWorkbook:
         
     def _write_page_url(self):
         """
-        Write page URL under analysis to sheet.
+        Write the requested page URL being analyzed to the sheet.
         
-        Current cell: Row 2, Column 5
+        self.cur_cell: Row 2, Col 5
         """
         url_format = self._url_format()
         
@@ -122,9 +121,8 @@ class ExcelWorkbook:
             self.url, url_format)
     
     def _write_audit_results(self, audit_results, is_first):
-        """
-        Iterate through audit results and write to Excel worksheet.
-        """
+        """Iterate through the audit results and write them to the worksheet."""
+        
         column_format = self._column_format()
         row, col = self.cur_cell[0], self.cur_cell[1]
         
@@ -145,9 +143,8 @@ class ExcelWorkbook:
         self.cur_cell[1] = col + 2
                    
     def _write_metrics_results(self, metrics_results, is_first):
-        """
-        Iterate through metrics results and write to Excel worksheet.
-        """
+        """Iterate through the metrics results and write them to the worksheet."""
+        
         column_format = self._column_format()
         data_format = self._data_format()
         row, col = self.cur_cell[0], self.cur_cell[1]
@@ -161,9 +158,8 @@ class ExcelWorkbook:
             col += 1
             
     def _write_results_headings(self, row, col, k, column_format, result_type):
-        """
-        Write headings for audit or metrics results to worksheet.
-        """
+        """Write the headings for audit or metrics results to the worksheet."""
+        
         if result_type == 'audit':
             self.worksheet.merge_range(row, col, row, col + 1, k, column_format)
             self.worksheet.write(row + 1, col, 'Score', column_format)
@@ -174,6 +170,7 @@ class ExcelWorkbook:
         
     def _column_format(self):
         """Reusable formatting for column cells."""
+        
         return self.workbook.add_format({
             'font_size': 16,
             'bold': 1,
@@ -182,6 +179,7 @@ class ExcelWorkbook:
     
     def _data_format(self):
         """Reusable formatting for cells with regular data."""
+        
         return self.workbook.add_format({
             'font_size': 14,
             'align': 'center',
@@ -189,6 +187,7 @@ class ExcelWorkbook:
     
     def _url_format(self):
         """Reusable formatting for cells with URLs."""
+        
         return self.workbook.add_format({
             'font_size': 14,
             'align': 'left',
@@ -196,6 +195,7 @@ class ExcelWorkbook:
         
     def _metadata_format(self):
         """Reusable formatting for cells with metadata."""
+        
         return self.workbook.add_format({
             'font_size': 20,
             'bold': 1,
@@ -203,9 +203,8 @@ class ExcelWorkbook:
             'valign': 'vcenter'})
         
     def _score_format(self, score):
-        """
-        Reusable formatting and color coding for cells with scores.
-        """
+        """Reusable formatting and color coding for cells with scores."""
+        
         if score == 'n/a':
             color = 'white'
         elif score >= 90:

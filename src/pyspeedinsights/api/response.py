@@ -6,9 +6,8 @@ from ..cli.choices import COMMAND_CHOICES
         
 
 def process_json(json_resp, category, strategy):
-    """
-    Dump raw json to a file at the root.
-    """
+    """Dump raw json response to a file in the working directory."""
+    
     date = _get_timestamp(json_resp)
     filename = f'psi-s-{strategy}-c-{category}-{date}.json'
     
@@ -18,19 +17,18 @@ def process_json(json_resp, category, strategy):
 
 
 def process_excel(json_resp, category, metrics):
-    """
-    Call various processing functions for Excel or Sitemap formats.
-    """
-    # Location of the audits field in json response
-    audits_base = _get_audits_base(json_resp)
+    """Call various parsing operations for Excel / Sitemap formats."""
+    
+    audits_base = _get_audits_base(json_resp) # Location of audits in json response
     
     metadata = _parse_metadata(json_resp, category)
     audit_results = _parse_audits(audits_base)
-    metrics_results = None
     
-    # Only process metrics for performance category
+    # Metrics are only available in the performance category.
     if metrics is not None and category == 'performance':
         metrics_results = _parse_metrics(audits_base, metrics)
+    else:
+        metrics_results = None
         
     results = {
         'metadata': metadata, 
@@ -42,9 +40,8 @@ def process_excel(json_resp, category, metrics):
     
     
 def _parse_metadata(json_resp, category):
-    """
-    Parse metadata from json response for writing to Excel sheet.
-    """
+    """Parse various metadata from the JSON response to write to Excel."""
+    
     json_base = json_resp["lighthouseResult"]
     strategy = json_base["configSettings"]["formFactor"]        
     category_score = json_base["categories"][category]["score"]
@@ -61,9 +58,8 @@ def _parse_metadata(json_resp, category):
 
     
 def _parse_audits(audits_base):
-    """
-    Parse Lighthouse audits from json response for writing to Excel sheet.
-    """
+    """Parse Lighthouse audits from the JSON response to write to Excel."""
+    
     audit_results = {}
     
     # Create results dict with scores and numerical values for each audit.
@@ -75,48 +71,49 @@ def _parse_audits(audits_base):
         else:
             audit_results[k] = ['n/a', 'n/a']
             
-    # Sort dict alphabetically so each audit is written to Excel in order
+    # Sort dict alphabetically so each audit is written to Excel in the same order.
     audit_results = dict(sorted(audit_results.items()))
         
     return audit_results
 
 
 def _parse_metrics(audits_base, metrics):
-    """
-    Parse performance metrics from json response for writing to Excel sheet.
-    """
+    """Parse performance metrics from the JSON response to write to Excel."""
+    
     metrics_results = {}
     metrics_loc = audits_base["metrics"]["details"]["items"][0]
     
-    if "all" in metrics:
+    if 'all' in metrics:
         metrics_to_use = copy.copy(COMMAND_CHOICES['metrics'])
-        # Remove 'all' cmd option to avoid key errors (not in json resp)
+        # Remove 'all' to avoid key errors, as it doesn't exist in JSON resp.
         metrics_to_use.remove('all')
     else:
         metrics_to_use = metrics
     
-    # Create new dict of metrics based on user's chosen metrics    
+    # Create new dict of metrics based on user's chosen metrics.
     for field in metrics_to_use:
         metric = metrics_loc[field]
         metrics_results[field] = metric
         
-    # Sort dict alphabetically so each metric is written to Excel in order
+    # Sort dict alphabetically so each metric is written to Excel in the same order.
     metrics_results = dict(sorted(metrics_results.items()))
         
     return metrics_results
 
 
 def _get_audits_base(json_resp):
-    """
-    Get location of the audits field in json response.
-    """
+    """Return the location of audits in the JSON response."""
+    
     return json_resp["lighthouseResult"]["audits"]
 
 
 def _get_timestamp(json_resp):
     """
-    Parse the timestamp of the analysis from JSON response.
+    Parse the timestamp of the analysis from the JSON response.
+    
+    Covert it to a Python datetime object.
     """
+    
     timestamp = json_resp['analysisUTCTimestamp']
     date = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
     
