@@ -1,11 +1,19 @@
 # Python
 __pycache__/
 *.pyc
-/dist/
-src/*.egg-info
 .venv
+
+# Testing
 .pytest_cache
 .coverage
+.coverage.*
+htmlcov/
+.tox
+
+# Packaging / Dist
+dist/
+build/
+*.egg-info
 
 # Mac/OSX
 .DS_Store
