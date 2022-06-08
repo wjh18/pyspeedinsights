@@ -2,6 +2,8 @@
 
 A simple Python cli that parses your sitemap, sends async requests to the PageSpeed Insights API and writes color-coded Lighthouse results to Excel.
 
+![pyspeedinsights](images/screenshot.png)
+
 ## Why pyspeedinsights?
 
 Manually running your website's pages through Lighthouse or PageSpeed Insights can be extremely time consuming and difficult to manage. Especially with a large site.
