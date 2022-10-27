@@ -115,6 +115,7 @@ def _get_timestamp(json_resp):
     """
 
     timestamp = json_resp["analysisUTCTimestamp"]
-    date = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    dt_object = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    date = dt_object.strftime("%Y-%m-%d_%H.%M.%S")
 
     return date
