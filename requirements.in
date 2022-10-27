@@ -1,0 +1,13 @@
+requests
+XlsxWriter
+keyring
+aiohttp[speedups]
+# Dev
+pytest
+pytest-cov
+flake8
+isort
+black
+safety
+bandit
+pre-commit
