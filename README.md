@@ -84,13 +84,17 @@ To remove your API key from your default keystore, run `keyring del system psike
 
 ## Sitemap Support
 
-Currently, only URLs to valid XML sitemaps are supported for reports that utilize sitemap format.
+Currently, only URLs to valid XML sitemaps are supported for reports that utilize sitemap format. Please see [sitemaps.org](https://sitemaps.org/protocol.html) for specification details.
 
-Your web server or sitemap plugin must also allow robots to crawl your sitemap. If you see any permission errors that would be the first thing to check.
-
-In the future, support for sitemap indices, multiple sitemaps and more advanced sitemap parsing will hopefully be added.
+Your web server or sitemap plugin must also allow robots to crawl your sitemap. If you see any permission errors that would be the first thing to check. Certain security solutions like CloudFlare also block crawlers so whitelisting the server you're running the package from may also be preferrable.
 
 Your sitemap URL should be passed in as the positional argument for `url` when running `psi` from the command line.
+
+### Sitemap Index
+
+Support for sitemap index detection was recently added. This requires no additional action on your part. Simply pass your sitemap index in as the `url` argument via the cli.
+
+If a sitemap index is detected, the package will recursively gather the URLs listed in each sitemap in your sitemap index and include them in requests. If a standard sitemap file is passed, only that sitemap will be processed.
 
 ## Command Line Arguments
 
