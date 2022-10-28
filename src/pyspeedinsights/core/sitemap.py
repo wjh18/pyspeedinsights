@@ -12,8 +12,10 @@ def request_sitemap(url):
 
     url = validate_url(url)
 
-    if validate_sitemap_url(url) is not True:
-        err = "Invalid sitemap provided. Please provide a link to a valid XML sitemap."
+    if not validate_sitemap_url(url):
+        err = (
+            "Invalid sitemap URL provided. Please provide a URL to a valid XML sitemap."
+        )
         raise SystemExit(err)
     try:
         print(f"Requesting sitemap... ({url})")
@@ -55,5 +57,4 @@ def validate_sitemap_url(url):
 
     u = urlsplit(url)
     ext = splitext(u.path)[1]
-    if ext == ".xml":
-        return True
+    return ext == ".xml"
