@@ -4,7 +4,7 @@ from .api.request import gather_responses
 from .api.response import process_excel, process_json
 from .cli import commands
 from .core.excel import ExcelWorkbook
-from .core.sitemap import parse_sitemap, request_sitemap
+from .core.sitemap import process_sitemap, request_sitemap
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
         # Create list of request URLs based on sitemap.
         sitemap_url = url
         sitemap = request_sitemap(sitemap_url)
-        request_urls = parse_sitemap(sitemap)
+        request_urls = process_sitemap(sitemap)
         request_urls = list(set(request_urls))  # Remove duplicates if they exist.
     else:
         # For analyzing a single page, only process the requested URL.

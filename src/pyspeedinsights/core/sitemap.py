@@ -8,7 +8,7 @@ from ..utils.urls import validate_url
 
 
 def request_sitemap(url):
-    """Retrieve the sitemap from the URL provided in cmd args."""
+    """Retrieve the sitemap from the given URL"""
 
     url = validate_url(url)
     # Set a dummy user agent to avoid bot detection by firewalls
@@ -44,25 +44,59 @@ def request_sitemap(url):
     return sitemap
 
 
-def parse_sitemap(sitemap):
-    """Parse URLs from the XML sitemap and return a list of URLs."""
-
-    print("Parsing URLs from sitemap...")
-
-    root = ET.fromstring(sitemap)
-    namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
-
-    urls = []
-    for url in root.findall(f"{namespace}url"):
-        loc = url.find(f"{namespace}loc")
-        urls.append(loc.text)
-
-    return urls
-
-
 def validate_sitemap_url(url):
     """Validate that the sitemap URL is valid (.xml format)."""
 
     u = urlsplit(url)
     ext = splitext(u.path)[1]
     return ext == ".xml"
+
+
+def process_sitemap(sitemap):
+    """
+    Process an individual sitemap or recursively process multiple sitemaps
+    via a sitemap index and return a full list of request URLs.
+    """
+
+    root = ET.fromstring(sitemap)
+    sitemap_type = root.tag.split("}")[-1]
+
+    if sitemap_type == "sitemapindex":
+        request_urls = []
+        sitemap_urls = _parse_sitemap_index(root)
+
+        for sm_url in sitemap_urls:
+            sitemap = request_sitemap(sm_url)
+            request_urls.extend(process_sitemap(sitemap))
+
+    elif sitemap_type == "urlset":
+        request_urls = _parse_sitemap_urls(root)
+
+    return request_urls
+
+
+def _parse_sitemap_index(root):
+    """Parse sitemap URLs from the sitemap index and return them as a list."""
+
+    print("Sitemap index found. Parsing sitemap URLs...")
+    return _parse_urls_from_root(root, type="sitemap")
+
+
+def _parse_sitemap_urls(root):
+    """Parse URLs from the XML sitemap and return a list of request URLs."""
+
+    print("Parsing URLs from sitemap...")
+    return _parse_urls_from_root(root)
+
+
+def _parse_urls_from_root(root, type="url"):
+    """Parse URL locs from root xml element"""
+
+    namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+    urls = []
+
+    for el in root.findall(f"{namespace}{type}"):
+        loc = el.find(f"{namespace}loc")
+        urls.append(loc.text)
+
+    return urls
