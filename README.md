@@ -6,11 +6,11 @@ A simple Python cli that parses your sitemap, sends async requests to the PageSp
 
 ## Why pyspeedinsights?
 
-Manually running your website's pages through Lighthouse or PageSpeed Insights can be extremely time consuming and difficult to manage. Especially with a large site.
+Manually running your website's pages through Lighthouse or PageSpeed Insights can be extremely time consuming and cumbersome. This is especially true if your site contains a large number of pages.
 
-I personally had a hard time analyzing my site's overal performance from a 10,000-foot view without manually testing many similar types of pages.
+There's no easy way to analyze your site's overall performance from a 10,000-foot view without manually testing many similar types of pages.
 
-That's why I made this package. While there are similar tools out there, I couldn't find any solid Python ones that were easy to use.
+That's what this package attempts to solve. While there are similar tools out there, there weren't any solid Python ones that were built to support analysis in bulk.
 
 The pyspeedinsights cli allows you to analyze your entire site's performance quickly and uncover bottlenecks by reviewing color-coded audit results and metrics for each page in Excel.
 
@@ -60,7 +60,9 @@ The API has a daily and per-minute request quota of 25,000 and 240, respectively
 
 This package uses the `keyring` Python library to store API keys securely on your system's default keystore (e.g. MacOS Keychain for MacOS users).
 
-This dependency is installed automatically when you `pip install pyspeedinsights`. If for some reason it's not, run `pip install keyring` before running any `keyring` operations.
+*Note: If you're unable to use keyring for whatever reason, a fallback input will prompt you for your API key from the command line at the start of each run.*
+
+The dependency is installed automatically when you `pip install pyspeedinsights`. If for some reason it's not, run `pip install keyring` before running any `keyring` operations.
 
 Please see the [`keyring` documentation](https://github.com/jaraco/keyring#command-line-utility) if you require any additional help with the following commands.
 
@@ -82,13 +84,13 @@ To remove your API key from your default keystore, run `keyring del system psike
 
 ## Sitemap Support
 
-Currently only valid XML sitemaps are supported for reports that use sitemap format.
+Currently, only URLs to valid XML sitemaps are supported for reports that utilize sitemap format.
 
 Your web server or sitemap plugin must also allow robots to crawl your sitemap. If you see any permission errors that would be the first thing to check.
 
 In the future, support for sitemap indices, multiple sitemaps and more advanced sitemap parsing will hopefully be added.
 
-Sitemap URLs should be passed in as positional arguments for `url` when running `psi` from the command line.
+Your sitemap URL should be passed in as the positional argument for `url` when running `psi` from the command line.
 
 ## Command Line Arguments
 
@@ -242,7 +244,7 @@ Please see the PSI API docs for a [full list of locale options](https://develope
 
 Example:
 
-* `psi https://www.example.com -l ru` - localize results to Russian
+* `psi https://www.example.com -l fr` - localize results to French
 
 ### UTM Campaign: `-uc` or `--campaign` (optional) (experimental)
 
