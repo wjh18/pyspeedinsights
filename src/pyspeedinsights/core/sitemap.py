@@ -11,6 +11,14 @@ def request_sitemap(url):
     """Retrieve the sitemap from the URL provided in cmd args."""
 
     url = validate_url(url)
+    # Set a dummy user agent to avoid bot detection by firewalls
+    # e.g. CloudFlare issues a 403 if it detects the default requests module user-agent
+    dummy_user_agent = (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/104.0.5112.79 Safari/537.36"
+    )
+    headers = {"user-agent": dummy_user_agent}
 
     if not validate_sitemap_url(url):
         err = (
@@ -19,7 +27,7 @@ def request_sitemap(url):
         raise SystemExit(err)
     try:
         print(f"Requesting sitemap... ({url})")
-        resp = requests.get(url)
+        resp = requests.get(url, headers=headers)
         resp.raise_for_status()
     except requests.exceptions.HTTPError as errh:
         raise SystemExit(errh)
