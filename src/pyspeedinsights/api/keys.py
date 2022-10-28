@@ -1,21 +1,33 @@
 import keyring
+from keyring.errors import KeyringError
 
 
 def get_api_key():
     """
     Get the user's PSI API key from their keystore using keyring.
 
-    Exit the program if key is not set.
+    Allow manual entry of key if nonexistent or keystore errors occur.
+
+    Re-prompt for keys read in as empty strings. Otherwise, key validation
+    should be lenient with any errors handled at request time.
     """
+    try:
+        # get_password() returns None for an empty key
+        PSI_API_KEY = keyring.get_password("system", "psikey")
+    except KeyringError:
+        print("There was an error retrieving your API key from the keystore.")
+        PSI_API_KEY = None
 
-    PSI_API_KEY = keyring.get_password("system", "psikey")
+    if PSI_API_KEY is None:
+        PSI_API_KEY = input("No API key found. Enter it manually:\n")
 
-    if PSI_API_KEY is not None:
-        return PSI_API_KEY
-    else:
-        err = "Error: Your PageSpeed Insights API key is empty.\
-              \nGenerate a key with Google and set it with the command\
-                  `keyring set system psikey`.\
-              \nTo verify your key can be found, run the command\
-                  `keyring get system psikey`."
-        raise SystemExit(err)
+    while not PSI_API_KEY:
+        reprompt = input(
+            "Empty API key supplied. Please re-enter your key or Q to quit:\n"
+        )
+        if reprompt in ["Q", "q"]:
+            raise SystemExit
+        else:
+            PSI_API_KEY = reprompt
+
+    return PSI_API_KEY
