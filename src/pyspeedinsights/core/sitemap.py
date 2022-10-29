@@ -48,7 +48,7 @@ def validate_sitemap_url(url):
     """Validate that the sitemap URL is valid (.xml format)."""
 
     u = urlsplit(url)
-    ext = splitext(u.path)[1]
+    ext = splitext(u.path)[-1]
     return ext == ".xml"
 
 

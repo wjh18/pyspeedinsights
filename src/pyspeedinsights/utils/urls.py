@@ -8,11 +8,21 @@ def validate_url(url):
     """
 
     err = "Invalid URL. Please enter a valid Fully-Qualified Domain Name (FQDN)."
+    replacements = {}
     u = urlsplit(url)
 
-    if not (u.scheme and u.netloc):
-        if "." not in u.path:
+    if not u.scheme:
+        replacements["scheme"] = "https"
+
+    if not u.netloc:
+        if ("." not in u.path) or ("." and "/" in u.path):
             raise SystemExit(err)
-        u = u._replace(scheme="https", netloc=u.path, path="")
+        else:
+            replacements["netloc"] = u.path
+            replacements["path"] = ""
+
+    replacements["fragment"] = ""
+    replacements["query"] = ""
+    u = u._replace(**replacements)
 
     return u.geturl()
