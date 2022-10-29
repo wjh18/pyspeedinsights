@@ -113,7 +113,10 @@ pytest==7.2.0
     # via
     #   -r requirements.in
     #   pytest-cov
+    #   pytest-datadir
 pytest-cov==4.0.0
+    # via -r requirements.in
+pytest-datadir==1.4.1
     # via -r requirements.in
 pyyaml==6.0
     # via

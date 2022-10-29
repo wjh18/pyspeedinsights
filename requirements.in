@@ -5,6 +5,7 @@ aiohttp[speedups]
 # Dev
 pytest
 pytest-cov
+pytest-datadir
 flake8
 isort
 black
