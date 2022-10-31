@@ -52,14 +52,28 @@ def validate_sitemap_url(url):
     return ext == ".xml"
 
 
+def get_sitemap_root(sitemap):
+    """Get root element of sitemap"""
+    return ET.fromstring(sitemap)
+
+
+def get_sitemap_type(root):
+    """Get tag value to determine type of sitemap"""
+    return root.tag.split("}")[-1]
+
+
 def process_sitemap(sitemap):
     """
     Process an individual sitemap or recursively process multiple sitemaps
     via a sitemap index and return a full list of request URLs.
     """
+    err = "Sitemap format invalid."
+    root = get_sitemap_root(sitemap)
 
-    root = ET.fromstring(sitemap)
-    sitemap_type = root.tag.split("}")[-1]
+    try:
+        sitemap_type = get_sitemap_type(root)
+    except ET.ParseError:
+        raise SystemExit(err)
 
     if sitemap_type == "sitemapindex":
         request_urls = []
@@ -68,9 +82,10 @@ def process_sitemap(sitemap):
         for sm_url in sitemap_urls:
             sitemap = request_sitemap(sm_url)
             request_urls.extend(process_sitemap(sitemap))
-
     elif sitemap_type == "urlset":
         request_urls = _parse_sitemap_urls(root)
+    else:
+        raise SystemExit(err)
 
     return request_urls
 
