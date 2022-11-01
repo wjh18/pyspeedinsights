@@ -13,7 +13,7 @@ from pyspeedinsights.core.sitemap import (
 
 
 class MockResponse:
-    def __init__(self, text, status_code):
+    def __init__(self, text: str, status_code: int):
         self.text = text
         self.status_code = status_code
 
@@ -68,32 +68,26 @@ class TestValidateSitemapUrl:
 
 def test_request_sitemap_success(monkeypatch, sitemap, request_url):
     status_code = 200
-
     monkeypatch.setattr(
         requests, "get", lambda *args, **kwargs: MockResponse(sitemap, status_code)
     )
-
     assert request_sitemap(request_url) == sitemap
 
 
 def test_request_sitemap_client_error(monkeypatch, sitemap, request_url):
     status_code = 404
-
     monkeypatch.setattr(
         requests, "get", lambda *args, **kwargs: MockResponse(sitemap, status_code)
     )
-
     with pytest.raises(SystemExit):
         request_sitemap(request_url)
 
 
 def test_request_sitemap_server_error(monkeypatch, sitemap, request_url):
     status_code = 500
-
     monkeypatch.setattr(
         requests, "get", lambda *args, **kwargs: MockResponse(sitemap, status_code)
     )
-
     with pytest.raises(SystemExit):
         request_sitemap(request_url)
 
@@ -117,7 +111,6 @@ class TestProcessSitemap:
 
     def test_processing_regular_sitemap(self, sitemap, sitemap_url):
         num_urls = sitemap.count("<loc>")
-
         sitemap_urls = process_sitemap(sitemap)
         assert sitemap_url in sitemap_urls
         assert len(sitemap_urls) == num_urls
@@ -127,7 +120,6 @@ class TestProcessSitemap:
     ):
         num_sitemaps = sitemap_index.count("<sitemap>")
         num_urls = sitemap.count("<url>")
-
         monkeypatch.setattr(
             requests, "get", lambda *args, **kwargs: MockResponse(sitemap, 200)
         )

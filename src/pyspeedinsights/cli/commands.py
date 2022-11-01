@@ -1,22 +1,34 @@
-import argparse
+"""Set up, parsing and grouping of command line arguments with argparse.
+
+Typical usage example:
+    parser = set_up_arg_parser()
+    args = parse_args(parser)
+    arg_groups = create_arg_groups(parser, args)
+    api_args_dict = arg_group_to_dict(arg_groups, "API Group")
+"""
+
+from argparse import ArgumentParser, Namespace
+from typing import TypeAlias, Union
 
 from .choices import COMMAND_CHOICES
 
+ArgGroups: TypeAlias = dict[str, Namespace]
 
-def set_up_arg_parser():
+
+def set_up_arg_parser() -> ArgumentParser:
+    """Sets up argument parser with grouped command line arguments.
+
+    Commands are used in PSI API request query params and response processing.
+
+    Returns:
+        An argparse.ArgumentParser instance with 2 argument groups.
     """
-    Setup argument parser with grouped command line arguments.
-
-    Used to define PSI API request query parameters and how responses are processed.
-    """
-
-    parser = argparse.ArgumentParser(prog="pyspeedinsights")
+    parser = ArgumentParser(prog="pyspeedinsights")
 
     # Add argument options for default API call query params.
     api_group = parser.add_argument_group("API Group")
-
     api_group.add_argument(
-        "url", help="The URL or Sitemap URL of the site you want to analyze."
+        "url", help="The URL or sitemap URL of the site being analyzed."
     )
     api_group.add_argument(
         "-c",
@@ -24,8 +36,11 @@ def set_up_arg_parser():
         metavar="\b",
         dest="category",
         choices=COMMAND_CHOICES["category"],
-        help="The Lighthouse category to run:\
-            accessibility, best-practices, performance (default), pwa or seo.",
+        help=(
+            "The Lighthouse category to run: "
+            "`accessibility`, `best-practices`, "
+            "`performance` (default), `pwa` or `seo`."
+        ),
     )
     api_group.add_argument(
         "-l",
@@ -33,8 +48,7 @@ def set_up_arg_parser():
         metavar="\b",
         dest="locale",
         choices=COMMAND_CHOICES["locale"],
-        help="The locale used to localize formatted results.\
-            Defaults to English (US).",
+        help="The locale used to localize formatted results. Defaults to English (US).",
     )
     api_group.add_argument(
         "-s",
@@ -42,7 +56,7 @@ def set_up_arg_parser():
         metavar="\b",
         dest="strategy",
         choices=COMMAND_CHOICES["strategy"],
-        help="The analysis strategy to use: desktop (default) or mobile.",
+        help="The analysis strategy to use: `desktop` (default) or `mobile`.",
     )
     api_group.add_argument(
         "-uc",
@@ -68,19 +82,20 @@ def set_up_arg_parser():
 
     # Add other argument options for how to process the API response.
     proc_group = parser.add_argument_group("Processing Group")
-
     proc_group.add_argument(
         "-f",
         "--format",
         metavar="\b",
         dest="format",
         choices=COMMAND_CHOICES["format"],
-        help="The format of the results: json (default), excel or sitemap.\
-            json outputs all response data to a json file (1 URL at a time).\
-            excel writes Lighthouse audits and (optionally) metrics\
-                to an Excel file (1 URL at a time).\
-            sitemap parses the sitemap URL you provide and\
-                collects data for all your pages to Excel.",
+        help=(
+            "The format of the results: `json` (default), `excel` or `sitemap`. "
+            "`json` outputs all response data to a json file (1 URL only). "
+            "`excel` writes Lighthouse audits and (optionally) metrics "
+            "to an Excel file (1 URL only). "
+            "`sitemap` parses the sitemap URL you provide and writes Lighthouse audits "
+            "and (optionally) metrics for all the pages in your sitemap to Excel."
+        ),
     )
     proc_group.add_argument(
         "-m",
@@ -89,38 +104,43 @@ def set_up_arg_parser():
         dest="metrics",
         choices=COMMAND_CHOICES["metrics"],
         nargs="+",
-        help="The additional metric(s) to include in your report.\
-            For Excel format only (the json output includes all metrics).\
-            If excluded, only the default Lighthouse audits\
-                will be saved to Excel.\
-            Add the `all` argument to retrieve all available metrics.",
+        help=(
+            "The additional metric(s) to include in your report. "
+            "For `excel` or `sitemap` formats only (`json` includes all metrics). "
+            "If excluded, only the default Lighthouse audits will be written to Excel. "
+            "Add the `all` argument to retrieve all available metrics."
+        ),
     )
-
     return parser
 
 
-def parse_args(parser):
+def parse_args(parser: ArgumentParser) -> Namespace:
+    """Parses user arguments from the command line."""
+    return parser.parse_args()
+
+
+def create_arg_groups(parser: ArgumentParser, args: Namespace) -> ArgGroups:
+    """Creates separate namespaces for each arg group.
+
+    Allows for separately passing each arg group as kwargs to a func or cls.
+
+    Returns:
+        A dict with group names as keys and argparse.Namespace instances as values.
     """
-    Parse user arguments from the command line.
-
-    With `psi` console script entry point or when invoking the module directly.
-    """
-
-    args = parser.parse_args()
-    return args
-
-
-def create_arg_groups(parser, args):
-    """
-    Create separate namespaces for each arg group.
-
-    Necessary for passing each arg group separately as kwargs.
-    """
-
     arg_groups = {}
-
     for group in parser._action_groups:
         group_dict = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
-        arg_groups[group.title] = argparse.Namespace(**group_dict)
-
+        arg_groups[group.title] = Namespace(**group_dict)
     return arg_groups
+
+
+def arg_group_to_dict(
+    arg_groups: ArgGroups, arg_group_name: str
+) -> dict[str, Union[str, None]]:
+    """Converts an arg group Namespace to a dict.
+
+    Returns:
+        A dict with str-based API or reponse processing param names as keys
+        and str or NoneType as values.
+    """
+    return vars(arg_groups[arg_group_name])
