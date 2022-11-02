@@ -25,21 +25,21 @@ def get_api_key() -> str:
     """
     try:
         # get_password() returns None for an empty key
-        PSI_API_KEY = keyring.get_password("system", "psikey")
+        psi_api_key = keyring.get_password("system", "psikey")
     except KeyringError:
         print("There was an error retrieving your API key from the keystore.")
-        PSI_API_KEY = None
+        psi_api_key = None
 
-    if PSI_API_KEY is None:
-        PSI_API_KEY = input("No API key found. Enter it manually:\n")
+    if psi_api_key is None:
+        psi_api_key = input("No API key found. Enter it manually:\n")
 
-    while not PSI_API_KEY:
+    while not psi_api_key:
         reprompt = input(
             "Empty API key supplied. Please re-enter your key or Q to quit:\n"
         )
-        if reprompt in ["Q", "q"]:
+        if reprompt in ("Q", "q"):
             raise SystemExit
         else:
-            PSI_API_KEY = reprompt
+            psi_api_key = reprompt
 
-    return PSI_API_KEY
+    return psi_api_key

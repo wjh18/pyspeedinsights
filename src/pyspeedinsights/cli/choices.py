@@ -6,9 +6,9 @@
 """
 
 COMMAND_CHOICES = {
-    "category": ["accessibility", "best-practices", "performance", "pwa", "seo"],
-    "strategy": ["desktop", "mobile"],
-    "locale": [
+    "category": ("accessibility", "best-practices", "performance", "pwa", "seo"),
+    "strategy": ("desktop", "mobile"),
+    "locale": (
         "ar",
         "bg",
         "ca",
@@ -49,9 +49,10 @@ COMMAND_CHOICES = {
         "tr",
         "uk",
         "vi",
-    ],
-    "format": ["json", "excel", "sitemap"],
+    ),
+    "format": ("json", "excel", "sitemap"),
     # `all` is used as an arg to include all metrics in the Excel output
+    # This must be a list instead of tuple so "all" can be removed from it
     "metrics": [
         "all",
         "observedTotalCumulativeLayoutShift",

@@ -1,12 +1,12 @@
 """Excel workbook operations for writing PSI API results to Excel."""
 
 from dataclasses import dataclass, field
-from typing import Any, TypeAlias, Union
+from typing import Any, TypeAlias, Union, cast
 
 from xlsxwriter import Workbook
 from xlsxwriter.format import Format
 
-AuditResults: TypeAlias = dict[str, list[Union[int, float]]]
+AuditResults: TypeAlias = dict[str, tuple[Union[int, float]]]
 MetricsResults: TypeAlias = Union[dict[str, Union[int, float]], None]
 
 
@@ -20,14 +20,15 @@ class ExcelWorkbook:
     metrics_results: MetricsResults = None
     workbook: Workbook = None
     worksheet: Workbook.worksheet_class = None
-    cur_cell: list[int] = [0, 0]
+    cur_cell: list[int] = field(default_factory=list)
     category_scores: list[int] = field(default_factory=list)
 
     def set_up_worksheet(self) -> None:
         """Creates the workbook, adds a worksheet, and sets up column headings."""
         self._create_workbook()
         self.worksheet = self.workbook.add_worksheet()
-        row, col = self.cur_cell[0], self.cur_cell[1]  # First cell
+        self.cur_cell = [0, 0]
+        row, col = self.cur_cell  # First cell
         column_format = self._column_format()
         metadata_format = self._metadata_format()
 
@@ -110,12 +111,12 @@ class ExcelWorkbook:
     ) -> None:
         """Iterates through the audit results and writes them to the worksheet."""
         column_format = self._column_format()
-        row, col = self.cur_cell[0], self.cur_cell[1]
+        row, col = self.cur_cell
 
         for title, scores in audit_results.items():
             self.worksheet.set_column(col, col + 1, 15)
-            score = scores[0]
-            value = scores[1]
+            # cast() is a mypy workaround for issue #1178
+            score, value = cast(tuple[Any, Any], scores)
             score_format = self._score_format(score)
             if first_resp:
                 self._write_results_headings(
@@ -133,7 +134,7 @@ class ExcelWorkbook:
         """Iterates through the metrics results and writes them to the worksheet."""
         column_format = self._column_format()
         data_format = self._data_format()
-        row, col = self.cur_cell[0], self.cur_cell[1]
+        row, col = self.cur_cell
 
         if metrics_results is not None:
             for title, score in metrics_results.items():

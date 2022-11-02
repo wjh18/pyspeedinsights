@@ -45,7 +45,7 @@ def main() -> None:
     responses = run_requests(request_urls, api_args_dict)
 
     json_output = format == "json" or format is None
-    excel_output = format in ["excel", "sitemap"]
+    excel_output = format in ("excel", "sitemap")
 
     for num, response in enumerate(responses):
         if json_output:

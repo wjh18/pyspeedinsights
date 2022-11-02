@@ -63,13 +63,13 @@ def _parse_metadata(json_resp: dict, category: str) -> dict[str, Union[str, int]
     return metadata
 
 
-def _parse_audits(audits_base: dict) -> dict[str, list[Union[int, float]]]:
+def _parse_audits(audits_base: dict) -> dict[str, tuple[Union[int, float]]]:
     """Parses Lighthouse audits from the JSON response to write to Excel.
 
     Scores from 0-100 are given for the numeric value of each audit.
 
     Returns:
-        A dict of audit results with audit names as keys and lists of length 2
+        A dict of audit results with audit names as keys and tuples of length 2
         as values containing the audit scores and numeric values, respectively.
     """
     audit_results = {}
@@ -78,9 +78,9 @@ def _parse_audits(audits_base: dict) -> dict[str, list[Union[int, float]]]:
         score = audits_base[k].get("score")
         if score is not None:
             num_value = audits_base[k].get("numericValue", "n/a")
-            audit_results[k] = [score * 100, num_value]
+            audit_results[k] = (score * 100, num_value)
         else:
-            audit_results[k] = ["n/a", "n/a"]
+            audit_results[k] = ("n/a", "n/a")
     # Sort dict alphabetically so each audit is written to Excel in the same order.
     return sort_dict_alpha(audit_results)
 
@@ -99,7 +99,8 @@ def _parse_metrics(
     if "all" in metrics:
         metrics_to_use = copy.copy(COMMAND_CHOICES["metrics"])
         # Remove 'all' to avoid key errors, as it doesn't exist in JSON resp.
-        metrics_to_use.remove("all")
+        if type(metrics_to_use) == list:
+            metrics_to_use.remove("all")
     else:
         metrics_to_use = metrics
 
