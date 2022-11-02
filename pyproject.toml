@@ -14,3 +14,14 @@ known_local_folder = "pyspeedinsights"
 
 [tool.black]
 target-version = ['py39']
+
+[tool.mypy]
+warn_return_any = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "xlsxwriter",
+    "xlsxwriter.format"
+]
+ignore_missing_imports = true

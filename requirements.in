@@ -12,3 +12,5 @@ black
 safety
 bandit
 pre-commit
+mypy
+types-requests
