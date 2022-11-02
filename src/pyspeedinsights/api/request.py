@@ -1,6 +1,7 @@
 """Async request preparation and processing for PSI API calls."""
 
 import asyncio
+from collections import Counter
 from typing import Any, Coroutine, Union
 
 import aiohttp
@@ -44,13 +45,14 @@ async def get_response(
     # Use API defaults instead of passing None values as query params.
     params = remove_nonetype_dict_items(params)
     params["key"] = get_api_key()
+    req_url = params["url"]
 
     # Add a 1s delay between calls to avoid 500 errors from server.
     global next_delay
     next_delay += 1
     await asyncio.sleep(next_delay)
 
-    print(f"Sending request... ({params['url']})")
+    print(f"Sending request... ({req_url})")
     # Make async call with query params to PSI API and await response.
     async with aiohttp.ClientSession() as session:
         async with session.get(url=base_url, params=params) as resp:
@@ -60,13 +62,18 @@ async def get_response(
                 try:
                     resp.raise_for_status()
                     json_resp = await resp.json()
-                    print(f"Request successful! ({params['url']})")
+                    print(f"Request successful! ({req_url})")
                 except aiohttp.ClientError as err_c:
                     if retry_attempts < 1:
+                        print(err_c)
+                        print(f"Retry limit reached. Skipping ({req_url})")
                         raise aiohttp.ClientError(err_c)
                     else:
-                        print(err_c)
                         retry_attempts -= 1
+                        print(
+                            "Request failed. Retrying... ",
+                            f"{retry_attempts} retries left ({req_url})",
+                        )
                         await asyncio.sleep(1)
     return json_resp
 
@@ -85,8 +92,16 @@ def run_requests(
 async def gather_responses(tasks: list[Coroutine]) -> list[dict]:
     """Gathers tasks and awaits the return of the responses for processing."""
     print(f"Preparing {len(tasks)} URL(s)...")
-    responses = await asyncio.gather(*tasks)
-    print(f"{len(responses)}/{len(tasks)} URL(s) processed successfully.")
+    responses = await asyncio.gather(*tasks, return_exceptions=True)
+
+    type_counts = Counter(type(r) for r in responses)
+    c_success, c_fail = type_counts[dict], type_counts[aiohttp.ClientError]
+    print(
+        f"{c_success}/{len(tasks)} URL(s) processed successfully. ",
+        f"{c_fail} skipped due to errors.",
+    )
+    # Remove failures for response processing
+    responses = [r for r in responses if type(r) == dict]
     return responses
 
 
