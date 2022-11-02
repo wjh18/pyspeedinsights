@@ -38,8 +38,7 @@ def main() -> None:
 
     if format == "sitemap":
         sitemap = request_sitemap(url)
-        request_urls = process_sitemap(sitemap)
-        request_urls = remove_dupes_from_list(request_urls)
+        request_urls = remove_dupes_from_list(process_sitemap(sitemap))
     else:
         request_urls = [url]  # Only request a single page's URL
 

@@ -5,6 +5,7 @@ Includes support for recursive parsing of multiple sitemaps via a sitemap index.
 
 import xml.etree.ElementTree as ET
 from os.path import splitext
+from typing import Optional
 from urllib.parse import urlsplit
 
 import requests
@@ -96,33 +97,37 @@ def process_sitemap(sitemap: str) -> list[str]:
         request_urls = []
         sitemap_urls = _parse_sitemap_index(root)
         for sm_url in sitemap_urls:
-            sitemap = request_sitemap(sm_url)
-            request_urls.extend(process_sitemap(sitemap))
+            if sm_url is not None:
+                sitemap = request_sitemap(sm_url)
+                request_urls.extend(process_sitemap(sitemap))
     elif sitemap_type == "urlset":
         request_urls = _parse_sitemap_urls(root)
     else:
         raise SystemExit(err)
 
+    if not request_urls:
+        raise SystemExit("No URLs found in the sitemap(s).")
     return request_urls
 
 
-def _parse_sitemap_index(root: ET.Element) -> list[str]:
+def _parse_sitemap_index(root: ET.Element) -> list[Optional[str]]:
     """Parse sitemap URLs from the sitemap index and return them as a list."""
     print("Sitemap index found. Parsing sitemap URLs...")
     return _parse_urls_from_root(root, type="sitemap")
 
 
-def _parse_sitemap_urls(root: ET.Element) -> list[str]:
+def _parse_sitemap_urls(root: ET.Element) -> list[Optional[str]]:
     """Parse URLs from the XML sitemap and return a list of request URLs."""
     print("Parsing URLs from sitemap...")
     return _parse_urls_from_root(root)
 
 
-def _parse_urls_from_root(root: ET.Element, type: str = "url") -> list[str]:
+def _parse_urls_from_root(root: ET.Element, type: str = "url") -> list[Optional[str]]:
     """Parse URL locs from root xml element."""
     namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
     urls = []
     for el in root.findall(f"{namespace}{type}"):
         loc = el.find(f"{namespace}loc")
-        urls.append(loc.text)
+        if loc is not None:
+            urls.append(loc.text)
     return urls

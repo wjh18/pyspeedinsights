@@ -181,7 +181,7 @@ class ExcelWorkbook:
             {"font_size": 20, "bold": 1, "align": "left", "valign": "vcenter"}
         )
 
-    def _score_format(self, score: Union[int, str]) -> Format:
+    def _score_format(self, score: Union[int, float]) -> Format:
         """Reusable formatting and color coding for cells with scores."""
 
         def find_color_match(formats: dict[str, bool]) -> str:
