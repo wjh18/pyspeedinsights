@@ -1,14 +1,14 @@
-"""Set up, parsing and grouping of command line arguments with argparse.
+"""Sets up, parses and groups command line arguments using argparse.
 
 Typical usage example:
     parser = set_up_arg_parser()
     args = parse_args(parser)
     arg_groups = create_arg_groups(parser, args)
-    api_args_dict = arg_group_to_dict(arg_groups, "API Group")
+    arg_group_dict = arg_group_to_dict(arg_groups, "Group Name")
 """
 
 from argparse import ArgumentParser, Namespace
-from typing import TypeAlias, Union
+from typing import Any, TypeAlias, Union
 
 from .choices import COMMAND_CHOICES
 
@@ -130,13 +130,15 @@ def create_arg_groups(parser: ArgumentParser, args: Namespace) -> ArgGroups:
     arg_groups = {}
     for group in parser._action_groups:
         group_dict = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}
-        arg_groups[group.title] = Namespace(**group_dict)
+        title = group.title
+        if title:
+            arg_groups[title] = Namespace(**group_dict)
     return arg_groups
 
 
 def arg_group_to_dict(
     arg_groups: ArgGroups, arg_group_name: str
-) -> dict[str, Union[str, None]]:
+) -> dict[str, Union[Any, None]]:
     """Converts an arg group Namespace to a dict.
 
     Returns:

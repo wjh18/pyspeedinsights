@@ -1,13 +1,13 @@
 """Excel workbook operations for writing PSI API results to Excel."""
 
 from dataclasses import dataclass, field
-from typing import TypeAlias, Union
+from typing import Any, TypeAlias, Union
 
 from xlsxwriter import Workbook
 from xlsxwriter.format import Format
 
 AuditResults: TypeAlias = dict[str, list[Union[int, float]]]
-MetricsResults: TypeAlias = dict[str, Union[int, float]]
+MetricsResults: TypeAlias = Union[dict[str, Union[int, float]], None]
 
 
 @dataclass
@@ -15,19 +15,19 @@ class ExcelWorkbook:
     """Class for creating an Excel Workbook and writing the PSI API results to it."""
 
     url: str
-    metadata: dict[str, Union[str, int]]
+    metadata: dict[str, Any]
     audit_results: AuditResults
     metrics_results: MetricsResults = None
     workbook: Workbook = None
     worksheet: Workbook.worksheet_class = None
-    cur_cell: list[int] = None
+    cur_cell: list[int] = [0, 0]
     category_scores: list[int] = field(default_factory=list)
 
     def set_up_worksheet(self) -> None:
         """Creates the workbook, adds a worksheet, and sets up column headings."""
         self._create_workbook()
         self.worksheet = self.workbook.add_worksheet()
-        row, col = 0, 0  # First cell
+        row, col = self.cur_cell[0], self.cur_cell[1]  # First cell
         column_format = self._column_format()
         metadata_format = self._metadata_format()
 
@@ -57,8 +57,7 @@ class ExcelWorkbook:
             self._write_page_url()
             self._write_overall_category_score()
             self._write_audit_results(self.audit_results, first_resp)
-            if self.metrics_results is not None:
-                self._write_metrics_results(self.metrics_results, first_resp)
+            self._write_metrics_results(self.metrics_results, first_resp)
 
             self.cur_cell[0] += 1  # Move down 1 row for next page's results
             self.cur_cell[1] = 5  # Reset to first results column
@@ -136,14 +135,15 @@ class ExcelWorkbook:
         data_format = self._data_format()
         row, col = self.cur_cell[0], self.cur_cell[1]
 
-        for title, score in metrics_results.items():
-            self.worksheet.set_column(col, col, 30)
-            if first_resp:
-                self._write_results_headings(
-                    row, col, title, column_format, result_type="metrics"
-                )
-            self.worksheet.write(row + 2, col, score, data_format)
-            col += 1
+        if metrics_results is not None:
+            for title, score in metrics_results.items():
+                self.worksheet.set_column(col, col, 30)
+                if first_resp:
+                    self._write_results_headings(
+                        row, col, title, column_format, result_type="metrics"
+                    )
+                self.worksheet.write(row + 2, col, score, data_format)
+                col += 1
 
     def _write_results_headings(
         self, row: int, col: int, title: str, column_format: Format, result_type: str

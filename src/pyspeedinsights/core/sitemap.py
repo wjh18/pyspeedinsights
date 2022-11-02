@@ -74,7 +74,7 @@ def get_sitemap_type(root: ET.Element) -> str:
     return root.tag.split("}")[-1]
 
 
-def process_sitemap(sitemap: str) -> list[str]:
+def process_sitemap(sitemap: str) -> list[Optional[str]]:
     """Processes a sitemap or sitemap index based on type.
 
     Multiple sitemaps are processed recursively via a sitemap index.
@@ -83,7 +83,8 @@ def process_sitemap(sitemap: str) -> list[str]:
         A full list of request URLs for use in requests.
     Raises:
         SystemExit: The sitemap type couldn't be parsed from the root element.
-        SystemExit: The sitemap type parsed from the root element is invalid.
+                    The sitemap type parsed from the root element is invalid.
+                    No URLs were parsed from the sitemap(s) successfully.
     """
     err = "Sitemap format invalid."
     root = get_sitemap_root(sitemap)

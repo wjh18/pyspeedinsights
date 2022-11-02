@@ -1,7 +1,7 @@
 """Async request preparation and processing for PSI API calls."""
 
 import asyncio
-from typing import Coroutine
+from typing import Any, Coroutine, Union
 
 import aiohttp
 
@@ -71,7 +71,9 @@ async def get_response(
     return json_resp
 
 
-def run_requests(request_urls: list[str], api_args_dict: dict[str, str]) -> list[dict]:
+def run_requests(
+    request_urls: list[str], api_args_dict: dict[str, Union[str, None]]
+) -> list[dict]:
     """Runs async requests to PSI API and gathers responses.
 
     Called within main() in pyspeedinsights.app.
@@ -89,7 +91,7 @@ async def gather_responses(tasks: list[Coroutine]) -> list[dict]:
 
 
 def get_tasks(
-    request_urls: list[str], api_args_dict: dict[str, str]
+    request_urls: list[str], api_args_dict: dict[str, Any]
 ) -> list[Coroutine]:
     """Creates a list of tasks that call get_response() with request params."""
     tasks = []

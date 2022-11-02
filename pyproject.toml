@@ -16,7 +16,7 @@ known_local_folder = "pyspeedinsights"
 target-version = ['py39']
 
 [tool.mypy]
-warn_return_any = true
+# warn_return_any = true
 warn_unused_configs = true
 
 [[tool.mypy.overrides]]

@@ -3,7 +3,7 @@
 import copy
 import json
 from datetime import datetime
-from typing import Union
+from typing import Optional, Union
 
 from ..cli.choices import COMMAND_CHOICES
 from ..utils.generic import sort_dict_alpha
@@ -24,7 +24,7 @@ def process_json(json_resp: dict, category: str, strategy: str) -> None:
 
 
 def process_excel(
-    json_resp: dict, category: str, metrics: list[Union[str, None]]
+    json_resp: dict, category: str, metrics: Optional[list[str]]
 ) -> dict[str, Union[dict, None]]:
     """Calls various parsing operations for Excel / Sitemap formats.
 
@@ -39,7 +39,7 @@ def process_excel(
     else:
         metrics_results = None
 
-    results = {
+    results: dict[str, Union[dict, None]] = {
         "metadata": metadata,
         "audit_results": audit_results,
         "metrics_results": metrics_results,

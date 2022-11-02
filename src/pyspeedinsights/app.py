@@ -8,22 +8,22 @@ from .cli.commands import (
 )
 from .core.excel import ExcelWorkbook
 from .core.sitemap import process_sitemap, request_sitemap
-from .utils.generic import remove_dupes_from_list, remove_nonetype_dict_items
+from .utils.generic import remove_dupes_from_list
 
 
 def main() -> None:
-    """Runs the main execution loop of the program.
+    """Point of execution with `psi` from cli or via direct module invocation.
 
-    Called with `psi` command in cli or via invoking the module directly.
+    Parses cli arguments into separate groups for API calls and response processing.
+    Gets request urls from sitemap or mulitple sitemaps via sitemap index.
+    Prepares async API calls, awaits and returns their responses.
+    Iterates through each response and writes them to the chosen format.
     """
     parser = set_up_arg_parser()
     args = parse_args(parser)
     arg_groups = create_arg_groups(parser, args)
     api_args_dict = arg_group_to_dict(arg_groups, "API Group")
     proc_args_dict = arg_group_to_dict(arg_groups, "Processing Group")
-
-    # Avoid overriding kwargs by removing items with NoneType values
-    proc_args_dict = remove_nonetype_dict_items(proc_args_dict)
 
     format = proc_args_dict.get("format")
     metrics = proc_args_dict.get("metrics")
@@ -36,10 +36,10 @@ def main() -> None:
     category = "performance" if category is None else category
     strategy = "desktop" if strategy is None else strategy
 
-    if format == "sitemap":
+    if format == "sitemap" and url is not None:
         sitemap = request_sitemap(url)
         request_urls = remove_dupes_from_list(process_sitemap(sitemap))
-    else:
+    elif url is not None:
         request_urls = [url]  # Only request a single page's URL
 
     responses = run_requests(request_urls, api_args_dict)
@@ -53,26 +53,27 @@ def main() -> None:
         elif excel_output:
             excel_results = process_excel(response, category, metrics)
 
-            metadata = excel_results["metadata"]
-            audit_results = excel_results["audit_results"]
-            metrics_results = excel_results["metrics_results"]
             final_url = response["lighthouseResult"]["finalUrl"]
+            metadata = excel_results.get("metadata")
+            audit_results = excel_results.get("audit_results")
+            metrics_results = excel_results.get("metrics_results")
 
             first_resp = num == 0
-            if first_resp:
-                print("Creating Excel workbook...")
-                workbook = ExcelWorkbook(
-                    final_url, metadata, audit_results, metrics_results
-                )
-                workbook.set_up_worksheet()
-            else:
-                # Simply update the workbook attrs after the first response.
-                workbook.url = final_url
-                workbook.metadata = metadata
-                workbook.audit_results = audit_results
-                workbook.metrics_results = metrics_results
+            if metadata is not None and audit_results is not None:
+                if first_resp:
+                    print("Creating Excel workbook...")
+                    workbook = ExcelWorkbook(
+                        final_url, metadata, audit_results, metrics_results
+                    )
+                    workbook.set_up_worksheet()
+                else:
+                    # Simply update the workbook attrs after the first response.
+                    workbook.url = final_url
+                    workbook.metadata = metadata
+                    workbook.audit_results = audit_results
+                    workbook.metrics_results = metrics_results
 
-            workbook.write_to_worksheet(first_resp)
+                workbook.write_to_worksheet(first_resp)
         else:
             raise ValueError("Invalid format specified. Please try again.")
 
