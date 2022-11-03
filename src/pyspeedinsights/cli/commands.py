@@ -114,11 +114,6 @@ def set_up_arg_parser() -> ArgumentParser:
     return parser
 
 
-def parse_args(parser: ArgumentParser) -> Namespace:
-    """Parses user arguments from the command line."""
-    return parser.parse_args()
-
-
 def create_arg_groups(parser: ArgumentParser, args: Namespace) -> ArgGroups:
     """Creates separate namespaces for each arg group.
 

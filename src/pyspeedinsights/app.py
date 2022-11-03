@@ -1,17 +1,12 @@
 from .api.request import run_requests
 from .api.response import process_excel, process_json
-from .cli.commands import (
-    arg_group_to_dict,
-    create_arg_groups,
-    parse_args,
-    set_up_arg_parser,
-)
+from .cli.commands import arg_group_to_dict, create_arg_groups, set_up_arg_parser
 from .core.excel import ExcelWorkbook
 from .core.sitemap import process_sitemap, request_sitemap
 from .utils.generic import remove_dupes_from_list
 
 
-def main() -> None:
+def main(argv=None) -> None:
     """Point of execution with `psi` from cli or via direct module invocation.
 
     Parses cli arguments into separate groups for API calls and response processing.
@@ -20,7 +15,7 @@ def main() -> None:
     Iterates through each response and writes them to the chosen format.
     """
     parser = set_up_arg_parser()
-    args = parse_args(parser)
+    args = parser.parse_args(argv)
     arg_groups = create_arg_groups(parser, args)
     api_args_dict = arg_group_to_dict(arg_groups, "API Group")
     proc_args_dict = arg_group_to_dict(arg_groups, "Processing Group")
