@@ -33,13 +33,17 @@ def get_api_key() -> str:
     if psi_api_key is None:
         psi_api_key = input("No API key found. Enter it manually:\n")
 
+    retry_limit = 5
     while not psi_api_key:
         reprompt = input(
             "Empty API key supplied. Please re-enter your key or Q to quit:\n"
         )
         if reprompt in ("Q", "q"):
             raise SystemExit
+        elif retry_limit < 1:
+            raise SystemExit("Retry limit exceeded.")
         else:
             psi_api_key = reprompt
+        retry_limit -= 1
 
     return psi_api_key
