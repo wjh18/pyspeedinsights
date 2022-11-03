@@ -44,13 +44,13 @@ def request_sitemap(url: str) -> str:
         resp = requests.get(url, headers=headers)
         resp.raise_for_status()
     except requests.exceptions.HTTPError as errh:
-        raise SystemExit(errh)
+        raise SystemExit(f"HTTP Error: {errh}")
     except requests.exceptions.ConnectionError as errc:
-        raise SystemExit(errc)
+        raise SystemExit(f"Connection Error: {errc}")
     except requests.exceptions.Timeout as errt:
-        raise SystemExit(errt)
+        raise SystemExit(f"Timeout Error: {errt}")
     except requests.exceptions.RequestException as err:
-        raise SystemExit(err)
+        raise SystemExit(f"Request Error: {err}")
 
     sitemap = resp.text
     print("Sitemap retrieval successful!")
@@ -87,9 +87,9 @@ def process_sitemap(sitemap: str) -> list[Optional[str]]:
                     No URLs were parsed from the sitemap(s) successfully.
     """
     err = "Sitemap format invalid."
-    root = get_sitemap_root(sitemap)
 
     try:
+        root = get_sitemap_root(sitemap)
         sitemap_type = get_sitemap_type(root)
     except ET.ParseError:
         raise SystemExit(err)

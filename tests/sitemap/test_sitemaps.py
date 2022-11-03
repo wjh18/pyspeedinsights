@@ -1,5 +1,6 @@
 import pytest
 import requests
+from requests.exceptions import ConnectionError, HTTPError, RequestException, Timeout
 
 from pyspeedinsights.core.sitemap import (
     _parse_sitemap_index,
@@ -13,13 +14,30 @@ from pyspeedinsights.core.sitemap import (
 
 
 class MockResponse:
-    def __init__(self, text: str, status_code: int):
+    def __init__(self, text: str, status_code: int, exception: RequestException = None):
         self.text = text
         self.status_code = status_code
+        self.exception = exception
+        if self.exception:
+            self.raise_for_exception()
 
     def raise_for_status(self):
-        if 400 <= self.status_code < 600:
-            raise requests.exceptions.HTTPError("Error", response=self)
+        if 400 <= self.status_code < 600 and self.exception:
+            raise HTTPError("Error", response=self)
+
+    def raise_for_exception(self):
+        raise self.exception("Error")
+
+
+# def patch_response(status_code=200, exception=None):
+#     def wrapper(func, monkeypatch, sitemap, *args, **kwargs):
+#         monkeypatch.setattr(
+#             requests,
+#             "get",
+#             lambda *args, **kwargs: MockResponse(sitemap, status_code, exception)
+#         )
+#         return func(*args, **kwargs)
+#     return wrapper
 
 
 @pytest.fixture
@@ -30,6 +48,21 @@ def sitemap(shared_datadir):
 @pytest.fixture
 def sitemap_index(shared_datadir):
     return (shared_datadir / "sitemap_index.xml").read_text()
+
+
+@pytest.fixture
+def sitemap_invalid(shared_datadir):
+    return (shared_datadir / "sitemap_invalid.xml").read_text()
+
+
+@pytest.fixture
+def sitemap_invalid_tag(shared_datadir):
+    return (shared_datadir / "sitemap_invalid_tag.xml").read_text()
+
+
+@pytest.fixture
+def sitemap_no_urls(shared_datadir):
+    return (shared_datadir / "sitemap_no_urls.xml").read_text()
 
 
 @pytest.fixture
@@ -74,10 +107,22 @@ def test_request_sitemap_success(monkeypatch, sitemap, request_url):
     assert request_sitemap(request_url) == sitemap
 
 
+def test_request_sitemap_success_invalid_url(monkeypatch, sitemap):
+    status_code = 200
+    invalid_url = "https://www.example.com/sitemap.html"
+    monkeypatch.setattr(
+        requests, "get", lambda *args, **kwargs: MockResponse(sitemap, status_code)
+    )
+    with pytest.raises(SystemExit):
+        request_sitemap(invalid_url)
+
+
 def test_request_sitemap_client_error(monkeypatch, sitemap, request_url):
     status_code = 404
     monkeypatch.setattr(
-        requests, "get", lambda *args, **kwargs: MockResponse(sitemap, status_code)
+        requests,
+        "get",
+        lambda *args, **kwargs: MockResponse(sitemap, status_code, HTTPError),
     )
     with pytest.raises(SystemExit):
         request_sitemap(request_url)
@@ -86,7 +131,42 @@ def test_request_sitemap_client_error(monkeypatch, sitemap, request_url):
 def test_request_sitemap_server_error(monkeypatch, sitemap, request_url):
     status_code = 500
     monkeypatch.setattr(
-        requests, "get", lambda *args, **kwargs: MockResponse(sitemap, status_code)
+        requests,
+        "get",
+        lambda *args, **kwargs: MockResponse(sitemap, status_code, HTTPError),
+    )
+    with pytest.raises(SystemExit):
+        request_sitemap(request_url)
+
+
+def test_request_sitemap_connection_error(monkeypatch, sitemap, request_url):
+    status_code = 200
+    monkeypatch.setattr(
+        requests,
+        "get",
+        lambda *args, **kwargs: MockResponse(sitemap, status_code, ConnectionError),
+    )
+    with pytest.raises(SystemExit):
+        request_sitemap(request_url)
+
+
+def test_request_sitemap_timeout_error(monkeypatch, sitemap, request_url):
+    status_code = 200
+    monkeypatch.setattr(
+        requests,
+        "get",
+        lambda *args, **kwargs: MockResponse(sitemap, status_code, Timeout),
+    )
+    with pytest.raises(SystemExit):
+        request_sitemap(request_url)
+
+
+def test_request_sitemap_request_error(monkeypatch, sitemap, request_url):
+    status_code = 200
+    monkeypatch.setattr(
+        requests,
+        "get",
+        lambda *args, **kwargs: MockResponse(sitemap, status_code, RequestException),
     )
     with pytest.raises(SystemExit):
         request_sitemap(request_url)
@@ -127,3 +207,15 @@ class TestProcessSitemap:
         sitemap_urls = process_sitemap(sitemap_index)
         assert sitemap_url in sitemap_urls
         assert len(sitemap_urls) == num_sitemaps * num_urls
+
+    def test_processing_invalid_sitemap(self, sitemap_invalid):
+        with pytest.raises(SystemExit):
+            process_sitemap(sitemap_invalid)
+
+    def test_processing_invalid_sitemap_tag(self, sitemap_invalid_tag):
+        with pytest.raises(SystemExit):
+            process_sitemap(sitemap_invalid_tag)
+
+    def test_processing_sitemap_no_urls(self, sitemap_no_urls):
+        with pytest.raises(SystemExit):
+            process_sitemap(sitemap_no_urls)
