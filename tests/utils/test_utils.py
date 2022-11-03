@@ -9,19 +9,22 @@ from pyspeedinsights.utils.urls import validate_url
 
 
 class TestValidateUrl:
-    def test_exit_for_url_without_tld(self):
-        with pytest.raises(SystemExit):
-            validate_url("badurl")
+    """Tests validation of URLs."""
 
-    def test_exit_for_url_without_tld_with_path(self):
+    def raises_system_exit(self, url):
         with pytest.raises(SystemExit):
-            validate_url("badurl/path")
+            validate_url(url)
 
-    def test_exit_for_url_without_tld_with_path_and_extension(self):
-        with pytest.raises(SystemExit):
-            validate_url("badurl/path.html")
+    def test_url_without_tld_exits(self):
+        self.raises_system_exit("badurl")
 
-    def test_valid_urls_not_modified(self):
+    def test_url_without_tld_with_path_exits(self):
+        self.raises_system_exit("badurl/path")
+
+    def test_url_with_path_and_extension_without_tld_exits(self):
+        self.raises_system_exit("badurl/path.html")
+
+    def test_valid_urls_are_not_modified(self):
         urls = [
             "https://www.example.com",
             "https://example.com",
@@ -49,6 +52,8 @@ class TestValidateUrl:
 
 
 class TestDictUtils:
+    """Tests dictionary utilities."""
+
     dct = {1: None, 2: None, 3: "test"}
     dct2 = {"test": 1, "zest": 2, "lest": 3, "rest": 4}
 
@@ -62,9 +67,9 @@ class TestDictUtils:
 
 
 class TestDedupeList:
-    s = 1
-    d = 2
-    md = 3
+    """Tests remove_dupes_from_list() utility."""
+
+    s, d, md = 1, 2, 3
     lst = [s] * s + [d] * d + [md] * md
 
     def test_single_occurences_are_not_removed(self):
