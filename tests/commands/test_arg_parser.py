@@ -1,44 +1,73 @@
+from argparse import Namespace
+
 import pytest
 
-from pyspeedinsights.cli.commands import parse_args, set_up_arg_parser
+from pyspeedinsights.cli.commands import (
+    arg_group_to_dict,
+    create_arg_groups,
+    set_up_arg_parser,
+)
 
 
-@pytest.fixture(autouse=True)
-def mock_args(monkeypatch):
-    monkeypatch.setattr(
-        "sys.argv",
-        [
-            "pytest",
-            "https://www.example.com",
-            "-c",
-            "performance",
-            "-l",
-            "en",
-            "-s",
-            "desktop",
-            "-uc",
-            "test-uc",
-            "-us",
-            "test-us",
-            "-t",
-            "test-ct",
-            "-f",
-            "json",
-            "-m",
-            "all",
-        ],
-    )
+class TestArgParser:
+    """Tests parsing of arguments from cli with argparse."""
+
+    def raises_system_exit(self):
+        parser = set_up_arg_parser()
+        with pytest.raises(SystemExit):
+            parser.parse_args()
+
+    def test_no_args_exits(self):
+        self.raises_system_exit()
+
+    def test_help_arg_exits(self, patch_argv):
+        patch_argv(["psi", "--help"])
+        self.raises_system_exit()
+
+    def test_no_url_exits(self, patch_argv):
+        patch_argv(["psi", "-c" "seo"])
+        self.raises_system_exit()
+
+    def test_invalid_choice_exits(self, patch_argv):
+        patch_argv(["psi", "-c" "invalid"])
+        self.raises_system_exit()
+
+    def test_parse_all_args(self, patch_argv, all_args):
+        patch_argv(all_args)
+        parser = set_up_arg_parser()
+        args = parser.parse_args()
+        for arg in vars(args).values():
+            if type(arg) == list:
+                arg = arg[0]
+            assert arg in all_args
 
 
-def test_args_are_parsed_from_cmd_line():
-    parser = set_up_arg_parser()
-    args = parse_args(parser)
-    assert args.url == "https://www.example.com"
-    assert args.category == "performance"
-    assert args.strategy == "desktop"
-    assert args.locale == "en"
-    assert args.utm_campaign == "test-uc"
-    assert args.utm_source == "test-us"
-    assert args.captcha_token == "test-ct"
-    assert args.format == "json"
-    assert args.metrics == ["all"]
+class TestCreateArgGroups:
+    """Tests creation of argument groups."""
+
+    def get_arg_groups(self):
+        parser = set_up_arg_parser()
+        args = parser.parse_args()
+        return create_arg_groups(parser, args)
+
+    def test_groups_are_created(self, patch_argv):
+        patch_argv(["psi", "url"])
+        arg_groups = self.get_arg_groups()
+        assert type(arg_groups) == dict
+        assert "Processing Group" and "API Group" in arg_groups.keys()
+        for v in arg_groups.values():
+            assert type(v) == Namespace
+
+    def test_args_belong_to_correct_group(self, patch_argv):
+        patch_argv(["psi", "url", "-c", "seo", "-f", "json"])
+        arg_groups = self.get_arg_groups()
+        assert arg_groups["API Group"].category == "seo"
+        assert arg_groups["Processing Group"].format == "json"
+
+    def test_arg_group_to_dict(self, patch_argv):
+        patch_argv(["psi", "url", "-c", "seo", "-f", "json"])
+        arg_groups = self.get_arg_groups()
+        api_args_dict = arg_group_to_dict(arg_groups, "API Group")
+        assert api_args_dict.get("category") == "seo"
+        proc_args_dict = arg_group_to_dict(arg_groups, "Processing Group")
+        assert proc_args_dict.get("format") == "json"

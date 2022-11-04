@@ -6,7 +6,7 @@ from .core.sitemap import process_sitemap, request_sitemap
 from .utils.generic import remove_dupes_from_list
 
 
-def main(argv=None) -> None:
+def main() -> None:
     """Point of execution with `psi` from cli or via direct module invocation.
 
     Parses cli arguments into separate groups for API calls and response processing.
@@ -15,7 +15,7 @@ def main(argv=None) -> None:
     Iterates through each response and writes them to the chosen format.
     """
     parser = set_up_arg_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args()
     arg_groups = create_arg_groups(parser, args)
     api_args_dict = arg_group_to_dict(arg_groups, "API Group")
     proc_args_dict = arg_group_to_dict(arg_groups, "Processing Group")
