@@ -5,9 +5,12 @@ aiohttp[speedups]
 # Dev
 pytest
 pytest-cov
+pytest-datadir
 flake8
 isort
 black
 safety
 bandit
 pre-commit
+mypy
+types-requests

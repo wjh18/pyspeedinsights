@@ -121,7 +121,7 @@ Example of the same report but also specifying a UTM campaign name/source and ca
 
 The URL of the page you want to analyze OR a path to a valid XML sitemap if using sitemap format.
 
-This must be a fully qualified domain name with an optional path. URLs without a scheme default to `https`. URL fragments (`#`) will be removed automatically.
+This must be a fully qualified url with an optional path. URLs without a scheme default to `https`. URL fragments (`#`) and query parameters will be removed automatically.
 
 Good:
 
@@ -136,6 +136,8 @@ Good:
 Bad:
 
 * `psi example`
+  * Throws an error
+* `psi example/path`
   * Throws an error
 
 Sitemap example:
