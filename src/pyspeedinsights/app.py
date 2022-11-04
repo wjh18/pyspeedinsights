@@ -31,6 +31,13 @@ def main() -> None:
     category = "performance" if category is None else category
     strategy = "desktop" if strategy is None else strategy
 
+    json_output = format == "json" or format is None
+    excel_output = format in ("excel", "sitemap")
+
+    if metrics is not None and json_output or category != "performance":
+        print("Warning: metrics are only configurable for excel performance reports.")
+        print("JSON performance reports will include all metrics by default.")
+
     if format == "sitemap" and url is not None:
         sitemap = request_sitemap(url)
         request_urls = remove_dupes_from_list(process_sitemap(sitemap))
@@ -38,9 +45,6 @@ def main() -> None:
         request_urls = [url]  # Only request a single page's URL
 
     responses = run_requests(request_urls, api_args_dict)
-
-    json_output = format == "json" or format is None
-    excel_output = format in ("excel", "sitemap")
 
     for num, response in enumerate(responses):
         if json_output:
