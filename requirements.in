@@ -9,7 +9,7 @@ pytest-datadir
 flake8
 isort
 black
-safety
+# safety
 bandit
 pre-commit
 mypy
