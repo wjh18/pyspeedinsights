@@ -4,7 +4,86 @@ from pyspeedinsights.api.response import (
     _parse_audits,
     _parse_metadata,
     _parse_metrics,
+    process_excel,
 )
+
+
+class TestProcessExcel:
+    def _get_json_resp(self, all_metrics, category="performance"):
+        return {
+            "analysisUTCTimestamp": "2023-02-26T17:36:18.266Z",
+            "lighthouseResult": {
+                "configSettings": {"formFactor": "desktop"},
+                "categories": {category: {"score": 1}},
+                "audits": {
+                    "audit": {"score": 1, "numericValue": 300},
+                    "metrics": {"details": {"items": [all_metrics]}},
+                },
+            },
+        }
+
+    def test_process_excel_performance_custom_metrics(self, all_metrics):
+        json_resp = self._get_json_resp(all_metrics)
+        metrics_to_use = ["observedFirstPaint", "totalCumulativeLayoutShift"]
+        results = process_excel(json_resp, "performance", metrics_to_use)
+        assert results == {
+            "metadata": {
+                "category": "performance",
+                "category_score": 1,
+                "strategy": "desktop",
+                "timestamp": "2023-02-26_17.36.18",
+            },
+            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
+            "metrics_results": {
+                "observedFirstPaint": 115,
+                "totalCumulativeLayoutShift": 0,
+            },
+        }
+
+    def test_process_excel_performance_all_metrics(self, all_metrics):
+        json_resp = self._get_json_resp(all_metrics)
+        metrics_to_use = ["all"]
+        results = process_excel(json_resp, "performance", metrics_to_use)
+        assert results == {
+            "metadata": {
+                "category": "performance",
+                "category_score": 1,
+                "strategy": "desktop",
+                "timestamp": "2023-02-26_17.36.18",
+            },
+            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
+            "metrics_results": all_metrics,
+        }
+
+    def test_process_excel_non_performance_with_metrics(self, all_metrics):
+        json_resp = self._get_json_resp(all_metrics, "seo")
+        metrics_to_use = ["all"]
+        results = process_excel(json_resp, "seo", metrics_to_use)
+        assert results == {
+            "metadata": {
+                "category": "seo",
+                "category_score": 1,
+                "strategy": "desktop",
+                "timestamp": "2023-02-26_17.36.18",
+            },
+            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
+            "metrics_results": None,
+        }
+
+    def test_process_excel_non_performance_without_metrics(self, all_metrics):
+        json_resp = self._get_json_resp(all_metrics, "seo")
+        metrics_to_use = None
+        results = process_excel(json_resp, "seo", metrics_to_use)
+        assert results == {
+            "metadata": {
+                "category": "seo",
+                "category_score": 1,
+                "strategy": "desktop",
+                "timestamp": "2023-02-26_17.36.18",
+            },
+            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
+            "metrics_results": None,
+        }
 
 
 def test_parse_metadata():
