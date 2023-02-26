@@ -28,7 +28,7 @@ class MockResponse:
 def patch_response(monkeypatch, sitemap):
     """Fixture to patch response with custom status_code and exception"""
 
-    def wrapper(status_code=200, exception=None, *args, **kwargs):
+    def wrapper(status_code=None, exception=None, *args, **kwargs):
         monkeypatch.setattr(
             requests,
             "get",

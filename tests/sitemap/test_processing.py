@@ -47,7 +47,7 @@ class TestProcessSitemap:
     ):
         num_sitemaps = sitemap_index.count("<sitemap>")
         num_urls = sitemap.count("<url>")
-        patch_response()
+        patch_response(status_code=200, exception=None)
         sitemap_urls = process_sitemap(sitemap_index)
 
         assert sitemap_url in sitemap_urls
