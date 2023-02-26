@@ -11,9 +11,11 @@ testpaths = "tests"
 profile = "black"
 known_first_party = "pyspeedinsights"
 known_local_folder = "pyspeedinsights"
+skip_gitignore = true
 
 [tool.black]
 target-version = ['py39']
+line-length = 88
 
 [tool.mypy]
 # warn_return_any = true
@@ -25,3 +27,7 @@ module = [
     "xlsxwriter.format"
 ]
 ignore_missing_imports = true
+
+[tool.bandit]
+targets = ["src/pyspeedinsights"]
+exclude_dirs = [".venv", "tests"]
