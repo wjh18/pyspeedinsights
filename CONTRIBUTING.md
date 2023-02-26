@@ -19,4 +19,8 @@ To update requirements, add the new requirement to `requirements.in` and run `pi
 
 ## Editable mode
 
-It's recommended to install the package in editable mode with `pip install -e .` when testing the package in development. This will allow you to run commands with the `psi` entrypoint from your virtual environment instead of changing to the `src` directory and running the program as a module directly with `python -m pyspeedinsights`.
+It's recommended to install the package in editable mode with `pip install -e .` when testing the package in development.
+
+This will allow you to run commands with the `psi` entrypoint from your virtual environment instead of changing to the `src` directory and running the program as a module directly with `python -m pyspeedinsights`.
+
+For test coverage reports to work correctly, install the extras as well with `pip install -e ".[extra]"`.

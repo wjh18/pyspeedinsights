@@ -1,18 +1,24 @@
 # pyspeedinsights
 
-A simple Python cli that parses your sitemap, sends async requests to the PageSpeed Insights API and writes color-coded Lighthouse results to Excel.
+Measure your site speed, performance, accessibility and SEO in bulk from the command line with Python and the PageSpeed Insights API.
 
-![](https://raw.githubusercontent.com/wjh18/pyspeedinsights/master/images/screenshot.png)
+Support for sitemap parsing and asynchronous requests with aiohttp. Outputs to JSON or a color-coded Excel sheet for further analysis.
+
+![A screenshot of the tool's Excel output](https://raw.githubusercontent.com/wjh18/pyspeedinsights/master/images/screenshot.png)
+
+## What is pyspeedinsights?
+
+A simple Python cli that parses your sitemap, sends async requests to the PageSpeed Insights API and writes color-coded Lighthouse results to Excel.
 
 ## Why pyspeedinsights?
 
-Manually running your website's pages through Lighthouse or PageSpeed Insights can be extremely time consuming and cumbersome. This is especially true if your site contains a large number of pages.
+Manually running each page of your website through Google's Lighthouse or PageSpeed Insights can be extremely time consuming, especially if it has a large number of pages.
 
-There's no easy way to analyze your site's overall performance from a 10,000-foot view without manually testing many similar types of pages.
+This makes it difficult to analyze its overall performance from a 10,000-foot view without manually testing many similar types of pages.
 
-That's what this package attempts to solve. While there are similar tools out there, there weren't any solid Python ones that were built to support analysis in bulk.
+That's what this package attempts to solve. While there are similar tools out there, pyspeedinsights is the only Python implementation built to support analysis in bulk via async requests.
 
-The pyspeedinsights cli allows you to analyze your entire site's performance quickly and uncover bottlenecks by reviewing color-coded audit results and metrics for each page in Excel.
+Its user-friendly cli gives you the ability to analyze your entire site's speed, SEO, and accessibility results quickly and uncover bottlenecks by reviewing color-coded audit results and metrics for each page in Excel.
 
 ## Format Options
 
@@ -30,15 +36,27 @@ Please reference the [commands](#command-line-arguments) section for further ins
 
 From a virtual environment:
 
-`pip install pyspeedinsights`
+```shell
+pip install pyspeedinsights
+```
 
 From a system Python3 install on MacOS:
 
-`python3 -m pip install pyspeedinsights`
+```shell
+python3 -m pip install pyspeedinsights
+```
 
 From a system Python3 install on Windows:
 
-`py -m pip install pyspeedinsights`
+```shell
+py -m pip install pyspeedinsights
+```
+
+To run the package as a module without installing it from PyPI, `cd` into the `src` directory and run:
+
+```shell
+python -m pyspeedinsights
+```
 
 *Note that your PATH, OS or Python version may require that you modify these commands slightly. When in doubt, just install it like you would any other Python package.*
 
@@ -52,9 +70,9 @@ For this reason, a valid API key is currently required to use this package. Plea
 
 The key itself is added to the GET request URL as a query parameter.
 
-It's recommended to generate the key in Google Cloud Console > Credentials then restrict it to your host and the PageSpeed Insights API service. If you do go this route, make sure to enable the service in Enabled APIs & Services, as it may not be enabled by default.
+It's recommended to generate the key in *Google Cloud Console > Credentials* then restrict it to your host and the PageSpeed Insights API service. If you do go this route, make sure to enable the service in *Enabled APIs & Services*, as it may not be enabled by default.
 
-The API has a daily and per-minute request quota of 25,000 and 240, respectively. The async requests are slept for 1s between each call to avoid hitting the per minute quota or overloading the API and getting hit with 500 errors.
+The API has a daily and per-minute request quota of 25,000 and 240, respectively. The package automatically sleeps requests for 1 second between each call to avoid hitting the per minute quota or overloading the API and getting hit with 500 errors.
 
 ### Keyring
 
@@ -62,13 +80,17 @@ This package uses the `keyring` Python library to store API keys securely on you
 
 *Note: If you're unable to use keyring for whatever reason, a fallback input will prompt you for your API key from the command line at the start of each run.*
 
-The dependency is installed automatically when you `pip install pyspeedinsights`. If for some reason it's not, run `pip install keyring` before running any `keyring` operations.
+The dependency is installed automatically when you `pip install pyspeedinsights`. If for whatever reason you're getting a `ImportError: No module named keyring` error, run `pip install keyring` before running any `keyring` operations.
 
 Please see the [`keyring` documentation](https://github.com/jaraco/keyring#command-line-utility) if you require any additional help with the following commands.
 
 ### Saving Your API Key
 
-To save your API key to your default keystore, run `keyring set system psikey`.
+To save your API key to your default keystore, run:
+
+```shell
+keyring set system psikey
+````
 
 The last argument has to be `psikey`. This is because `pyspeedinsights` looks for that username to read in your key during requests. `system` will instruct `keyring` to automatically detect your system's default keystore.
 
@@ -76,11 +98,23 @@ You'll then receive a prompt where you can enter your key to save it.
 
 ### Verifying Your API Key
 
-To verify that your key can be read, run `keyring get system psikey`. Your key should be output to the command line.
+To verify that your key can be read, run:
+
+```shell
+keyring get system psikey
+```
+
+Your key should be output to the command line.
 
 ### Removing Your API Key
 
-To remove your API key from your default keystore, run `keyring del system psikey`, then verify that it's no longer accessible with `keyring get system psikey`.
+To remove your API key from your default keystore, run:
+
+```shell
+keyring del system psikey
+```
+
+Then verify that it's no longer accessible with `keyring get system psikey`.
 
 ## Sitemap Support
 
@@ -100,7 +134,7 @@ If a sitemap index is detected, the package will recursively gather the URLs lis
 
 If you've installed `pyspeedinsights` with `pip`, the default command to run cli commands is `psi`.
 
-If you've simply cloned the repo, you can run the cli as a module directly with `python -m pyspeedinsights`.
+If you've simply cloned or downloaded the repo, you can run the cli as a module directly with `python -m pyspeedinsights`. Make sure to `cd` into the `src` directory first.
 
 For help with the following commands, run `psi --help`.
 
@@ -113,17 +147,17 @@ Example of requesting a desktop performance report with all metrics for all the 
 * `psi https://www.example.com/sitemap.xml -f sitemap -m all -c performance -s desktop -l en`
   * Equivalent to: `psi https://www.example.com/sitemap.xml -f sitemap -m all` (`performance`, `desktop` and `en` are defaults)
 
-Example of the same report but also specifying a UTM campaign name/source and captcha token (experimental / untested):
+Example of the same report but also specifying a UTM campaign name/source and captcha token (experimental/untested):
 
 * `psi https://www.example.com/sitemap.xml -f sitemap -m all -uc my-campaign-name -us my-campaign-source -t my-captcha-token`
 
 ### Request / Sitemap URL: `url` (required)
 
-The URL of the page you want to analyze OR a path to a valid XML sitemap if using sitemap format.
+The URL of the page you want to analyze *or* a path to a valid XML sitemap (index) if using sitemap format.
 
-This must be a fully qualified url with an optional path. URLs without a scheme default to `https`. URL fragments (`#`) and query parameters will be removed automatically.
+This must be a fully qualified url with an optional path. URLs without a scheme default to `https`. URL fragments (`#`) and query parameters (`?`) will be removed automatically.
 
-Good:
+Valid commands:
 
 * `psi https://example.com`
 * `psi https://www.example.com`
@@ -133,7 +167,7 @@ Good:
 * `psi https://example.com#test`
   * Modified URL: `https://example.com`
 
-Bad:
+Invalid commands:
 
 * `psi example`
   * Throws an error
@@ -151,11 +185,11 @@ Please see [sitemaps](#sitemap-support) for more info.
 
 The format of the Lighthouse results output.
 
-**`json` (default)** - Output the raw JSON response from the API to your working directory (single pages only). You can add a `-f json` argument explicitly or leave it out to simply default to JSON output.
+* `json` (default): Output the raw JSON response from the API to your working directory (single pages only). You can add a `-f json` argument explicitly or leave it out to simply default to JSON output.
 
-**`excel`** - Write color-coded Lighthouse audits and (optionally) metrics to an Excel sheet (analyze the single `url` only).
+* `excel`: Write color-coded Lighthouse audits and (optionally) metrics to an Excel sheet (analyze the single `url` only).
 
-`sitemap` - Specify a sitemap file to parse and output your full site's color-coded Lighthouse audits and (optionally) metrics to an Excel sheet. When using this option, the `url` argument above needs to be a direct link to your XML sitemap. Please see [sitemaps](#sitemap-support) for more info.
+* `sitemap`: Specify a sitemap (or index) file to parse and output your full site's color-coded Lighthouse audits and (optionally) metrics to an Excel sheet. When using this option, the `url` argument above needs to be a direct link to your XML sitemap. Please see [sitemaps](#sitemap-support) for more info.
 
 Example:
 
