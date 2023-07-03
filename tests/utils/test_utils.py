@@ -36,7 +36,32 @@ class TestValidateUrl:
             assert mod_url == url
 
     def test_missing_scheme_is_added(self):
+        url = "example.com"
+        mod_url = validate_url(url)
+        assert mod_url == "https://" + url
+
+    def test_missing_scheme_is_added_with_path(self):
+        url = "example.com/hello"
+        mod_url = validate_url(url)
+        assert mod_url == "https://" + url
+
+    def test_missing_scheme_is_added_with_filepath(self):
+        url = "example.com/hello.xml"
+        mod_url = validate_url(url)
+        assert mod_url == "https://" + url
+
+    def test_missing_scheme_is_added_with_subdomain(self):
         url = "www.example.com"
+        mod_url = validate_url(url)
+        assert mod_url == "https://" + url
+
+    def test_missing_scheme_is_added_with_subdomain_and_path(self):
+        url = "www.example.com/hello"
+        mod_url = validate_url(url)
+        assert mod_url == "https://" + url
+
+    def test_missing_scheme_is_added_with_subdomain_and_filepath(self):
+        url = "www.example.com/hello.xml"
         mod_url = validate_url(url)
         assert mod_url == "https://" + url
 

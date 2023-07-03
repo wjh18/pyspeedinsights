@@ -24,7 +24,10 @@ def validate_url(url: str) -> str:
     if not u.scheme:
         replacements["scheme"] = "https"
     if not u.netloc:
-        if ("." not in u.path) or ("." and "/" in u.path):
+        p_sep, dot = u.path.find("/"), u.path.find(".")
+        path_before_host = p_sep < dot and p_sep > 0
+        no_host = "." not in u.path
+        if path_before_host or no_host:
             raise SystemExit(err)
         else:
             replacements["netloc"] = u.path
