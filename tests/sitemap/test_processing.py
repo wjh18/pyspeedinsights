@@ -1,6 +1,7 @@
 import pytest
 
 from pyspeedinsights.core.sitemap import (
+    SitemapParseError,
     _parse_sitemap_index,
     _parse_sitemap_urls,
     _parse_urls_from_root,
@@ -31,8 +32,8 @@ class TestParseSitemap:
 class TestProcessSitemap:
     """Tests processing of URLs from sitemap."""
 
-    def sitemap_raises_system_exit(self, sitemap):
-        with pytest.raises(SystemExit):
+    def sitemap_raises_parse_error(self, sitemap):
+        with pytest.raises(SitemapParseError):
             process_sitemap(sitemap)
 
     def test_regular_sitemap_processed(self, sitemap, sitemap_url):
@@ -54,10 +55,10 @@ class TestProcessSitemap:
         assert len(sitemap_urls) == num_sitemaps * num_urls
 
     def test_invalid_sitemap_exits(self, sitemap_invalid):
-        self.sitemap_raises_system_exit(sitemap_invalid)
+        self.sitemap_raises_parse_error(sitemap_invalid)
 
     def test_invalid_sitemap_tag_exits(self, sitemap_invalid_tag):
-        self.sitemap_raises_system_exit(sitemap_invalid_tag)
+        self.sitemap_raises_parse_error(sitemap_invalid_tag)
 
     def test_sitemap_no_urls_exits(self, sitemap_no_urls):
-        self.sitemap_raises_system_exit(sitemap_no_urls)
+        self.sitemap_raises_parse_error(sitemap_no_urls)

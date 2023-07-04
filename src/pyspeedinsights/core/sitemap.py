@@ -15,6 +15,18 @@ from ..utils.urls import validate_url
 XMLElement: TypeAlias = Any
 
 
+class SitemapError(Exception):
+    """A base class for Sitemap exceptions."""
+
+
+class SitemapRetrievalError(SitemapError):
+    """A class for Sitemap retrieval exceptions."""
+
+
+class SitemapParseError(SitemapError):
+    """A class for Sitemap parsing exceptions."""
+
+
 def request_sitemap(url: str) -> str:
     """Retrieves the sitemap from the given URL.
 
@@ -24,7 +36,7 @@ def request_sitemap(url: str) -> str:
     Returns:
         A str with XML sitemap text content.
     Raises:
-        SystemExit: The sitemap URL is invalid or a request failed.
+        SitemapRetrievalError: The sitemap URL is invalid or a request failed.
     """
     url = validate_url(url)
     # Set a dummy user agent to avoid bot detection by firewalls
@@ -40,19 +52,19 @@ def request_sitemap(url: str) -> str:
         err = (
             "Invalid sitemap URL provided. Please provide a URL to a valid XML sitemap."
         )
-        raise SystemExit(err)
+        raise SitemapRetrievalError(err)
     try:
         print(f"Requesting sitemap... ({url})")
         resp = requests.get(url, headers=headers, timeout=(3.05, 5))
         resp.raise_for_status()
     except requests.exceptions.HTTPError as errh:
-        raise SystemExit(f"HTTP Error: {errh}")
+        raise SitemapRetrievalError(f"HTTP Error: {errh}")
     except requests.exceptions.ConnectionError as errc:
-        raise SystemExit(f"Connection Error: {errc}")
+        raise SitemapRetrievalError(f"Connection Error: {errc}")
     except requests.exceptions.Timeout as errt:
-        raise SystemExit(f"Timeout Error: {errt}")
+        raise SitemapRetrievalError(f"Timeout Error: {errt}")
     except requests.exceptions.RequestException as err:
-        raise SystemExit(f"Request Error: {err}")
+        raise SitemapRetrievalError(f"Request Error: {err}")
 
     sitemap = resp.text
     print("Sitemap retrieval successful!")
@@ -84,7 +96,7 @@ def process_sitemap(sitemap: str) -> list[Optional[str]]:
     Returns:
         A full list of request URLs for use in requests.
     Raises:
-        SystemExit: The sitemap type couldn't be parsed from the root element.
+        SitemapParseError: The sitemap type couldn't be parsed from the root element.
                     The sitemap type parsed from the root element is invalid.
                     No URLs were parsed from the sitemap(s) successfully.
     """
@@ -94,7 +106,7 @@ def process_sitemap(sitemap: str) -> list[Optional[str]]:
         root = get_sitemap_root(sitemap)
         sitemap_type = get_sitemap_type(root)
     except ET.ParseError:
-        raise SystemExit(err)
+        raise SitemapParseError(err)
 
     if sitemap_type == "sitemapindex":
         request_urls = []
@@ -106,10 +118,10 @@ def process_sitemap(sitemap: str) -> list[Optional[str]]:
     elif sitemap_type == "urlset":
         request_urls = _parse_sitemap_urls(root)
     else:
-        raise SystemExit(err)
+        raise SitemapParseError(err)
 
     if not request_urls:
-        raise SystemExit("No URLs found in the sitemap(s).")
+        raise SitemapParseError("No URLs found in the sitemap(s).")
     return request_urls
 
 

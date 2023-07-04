@@ -1,8 +1,10 @@
+import sys
+
 from .api.request import run_requests
 from .api.response import process_excel, process_json
 from .cli.commands import arg_group_to_dict, create_arg_groups, set_up_arg_parser
 from .core.excel import ExcelWorkbook
-from .core.sitemap import process_sitemap, request_sitemap
+from .core.sitemap import SitemapError, process_sitemap, request_sitemap
 from .utils.generic import remove_dupes_from_list
 
 
@@ -39,8 +41,11 @@ def main() -> None:
         print("JSON performance reports will include all metrics by default.")
 
     if format == "sitemap" and url is not None:
-        sitemap = request_sitemap(url)
-        request_urls = remove_dupes_from_list(process_sitemap(sitemap))
+        try:
+            sitemap = request_sitemap(url)
+            request_urls = remove_dupes_from_list(process_sitemap(sitemap))
+        except SitemapError as err:
+            sys.exit(err)
     elif url is not None:
         request_urls = [url]  # Only request a single page's URL
 
