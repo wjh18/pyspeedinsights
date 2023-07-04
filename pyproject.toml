@@ -24,7 +24,9 @@ warn_unused_configs = true
 [[tool.mypy.overrides]]
 module = [
     "xlsxwriter",
-    "xlsxwriter.format"
+    "xlsxwriter.format",
+    "defusedxml",
+    "defusedxml.ElementTree"
 ]
 ignore_missing_imports = true
 

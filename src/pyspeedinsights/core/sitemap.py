@@ -3,14 +3,16 @@
 Includes support for recursive parsing of multiple sitemaps via a sitemap index.
 """
 
-import xml.etree.ElementTree as ET
 from os.path import splitext
-from typing import Optional
+from typing import Any, Optional, TypeAlias
 from urllib.parse import urlsplit
 
+import defusedxml.ElementTree as ET
 import requests
 
 from ..utils.urls import validate_url
+
+XMLElement: TypeAlias = Any
 
 
 def request_sitemap(url: str) -> str:
@@ -41,7 +43,7 @@ def request_sitemap(url: str) -> str:
         raise SystemExit(err)
     try:
         print(f"Requesting sitemap... ({url})")
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=headers, timeout=(3.05, 5))
         resp.raise_for_status()
     except requests.exceptions.HTTPError as errh:
         raise SystemExit(f"HTTP Error: {errh}")
@@ -64,12 +66,12 @@ def validate_sitemap_url(url: str) -> bool:
     return ext == ".xml"
 
 
-def get_sitemap_root(sitemap: str) -> ET.Element:
+def get_sitemap_root(sitemap: str) -> XMLElement:
     """Gets the root element of the sitemap."""
     return ET.fromstring(sitemap)
 
 
-def get_sitemap_type(root: ET.Element) -> str:
+def get_sitemap_type(root: XMLElement) -> str:
     """Gets the tag value of the root element to determine sitemap type."""
     return root.tag.split("}")[-1]
 
@@ -111,19 +113,19 @@ def process_sitemap(sitemap: str) -> list[Optional[str]]:
     return request_urls
 
 
-def _parse_sitemap_index(root: ET.Element) -> list[Optional[str]]:
+def _parse_sitemap_index(root: XMLElement) -> list[Optional[str]]:
     """Parse sitemap URLs from the sitemap index and return them as a list."""
     print("Sitemap index found. Parsing sitemap URLs...")
     return _parse_urls_from_root(root, type="sitemap")
 
 
-def _parse_sitemap_urls(root: ET.Element) -> list[Optional[str]]:
+def _parse_sitemap_urls(root: XMLElement) -> list[Optional[str]]:
     """Parse URLs from the XML sitemap and return a list of request URLs."""
     print("Parsing URLs from sitemap...")
     return _parse_urls_from_root(root)
 
 
-def _parse_urls_from_root(root: ET.Element, type: str = "url") -> list[Optional[str]]:
+def _parse_urls_from_root(root: XMLElement, type: str = "url") -> list[Optional[str]]:
     """Parse URL locs from root xml element."""
     namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
     urls = []

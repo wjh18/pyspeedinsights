@@ -2,6 +2,7 @@ requests
 XlsxWriter
 keyring
 aiohttp[speedups]
+defusedxml
 # Dev
 pytest
 pytest-cov
