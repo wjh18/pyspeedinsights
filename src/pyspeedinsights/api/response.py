@@ -126,6 +126,9 @@ def _get_timestamp(json_resp: dict) -> str:
         A str in format year-month-day_hour.minute.second.
     """
     timestamp = json_resp["analysisUTCTimestamp"]
-    dt_object = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    ts_no_fractions = timestamp.split(".")[0]  # Remove fraction
+    if ts_no_fractions[-1] != "Z":
+        ts_no_fractions += "Z"  # Add Z back after fraction removal
+    dt_object = datetime.strptime(ts_no_fractions, "%Y-%m-%dT%H:%M:%SZ")
     date = dt_object.strftime("%Y-%m-%d_%H.%M.%S")
     return date

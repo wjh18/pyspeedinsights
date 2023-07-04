@@ -11,7 +11,7 @@ from pyspeedinsights.api.response import (
 class TestProcessExcel:
     def _get_json_resp(self, all_metrics, category="performance"):
         return {
-            "analysisUTCTimestamp": "2023-02-26T17:36:18.266Z",
+            "analysisUTCTimestamp": "2023-02-26T17:36:18",
             "lighthouseResult": {
                 "configSettings": {"formFactor": "desktop"},
                 "categories": {category: {"score": 1}},
@@ -88,7 +88,7 @@ class TestProcessExcel:
 
 def test_parse_metadata():
     json_resp = {
-        "analysisUTCTimestamp": "2023-02-26T17:36:18.266Z",
+        "analysisUTCTimestamp": "2023-02-26T17:36:18Z",
         "lighthouseResult": {
             "configSettings": {"formFactor": "desktop"},
             "categories": {"performance": {"score": 1}},
@@ -162,6 +162,12 @@ def test_get_audits_base():
 
 
 def test_get_timestamp():
-    json_resp = {"analysisUTCTimestamp": "2023-02-26T17:36:18.266Z"}
+    json_resp = {"analysisUTCTimestamp": "2023-02-26T17:36:18Z"}
+    timestamp = _get_timestamp(json_resp)
+    assert timestamp == "2023-02-26_17.36.18"
+
+
+def test_get_timestamp_fraction_removed():
+    json_resp = {"analysisUTCTimestamp": "2023-02-26T17:36:18.123Z"}
     timestamp = _get_timestamp(json_resp)
     assert timestamp == "2023-02-26_17.36.18"
