@@ -9,8 +9,8 @@ class TestKeyRetrieval:
     def throw_keyringerror(self):
         raise KeyringError
 
-    def throws_systemexit(self):
-        with pytest.raises(SystemExit):
+    def throws_keyringerror(self):
+        with pytest.raises(KeyringError):
             get_api_key()
 
     def test_key_found(self, patch_keyring):
@@ -26,7 +26,7 @@ class TestKeyRetrieval:
 
         get_api_key()
         out = capsys.readouterr().out  # Printed when KeyringError is caught
-        assert out == "There was an error retrieving your API key from the keystore.\n"
+        assert "There was an error retrieving your API key from the keystore: " in out
 
     def test_key_not_found_fallback_success(self, patch_keyring, patch_input):
         patch_keyring(mock_pw=None)
@@ -47,9 +47,9 @@ class TestKeyRetrieval:
         patch_keyring(mock_pw=None)
         inputs = iter(["", "Q"])  # Retry then quit
         patch_iter_input(inputs)
-        self.throws_systemexit()
+        self.throws_keyringerror()
 
     def test_key_not_found_fallback_retry_limit_hit(self, patch_input, patch_keyring):
         patch_keyring(mock_pw=None)
         patch_input(mock_input="")  # Empty input will eventually hit limit
-        self.throws_systemexit()
+        self.throws_keyringerror()

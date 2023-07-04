@@ -11,6 +11,14 @@ import keyring
 from keyring.errors import KeyringError
 
 
+class RetryLimitExceededError(KeyringError):
+    """Exception if the user has exceeded the retry limit for entering an API key."""
+
+
+class InputTerminatedError(KeyringError):
+    """Exception if the user manually terminates retry for entering an API key."""
+
+
 def get_api_key() -> str:
     """Gets the user's PSI API key from their keyring store.
 
@@ -26,8 +34,8 @@ def get_api_key() -> str:
     try:
         # get_password() returns None for an empty key
         psi_api_key = keyring.get_password("system", "psikey")
-    except KeyringError:
-        print("There was an error retrieving your API key from the keystore.")
+    except KeyringError as err:
+        print(f"There was an error retrieving your API key from the keystore: {err}")
         psi_api_key = None
 
     if psi_api_key is None:
@@ -39,9 +47,9 @@ def get_api_key() -> str:
             "Empty API key supplied. Please re-enter your key or Q to quit:\n"
         )
         if reprompt in ("Q", "q"):
-            raise SystemExit
+            raise InputTerminatedError("API key input cancelled.")
         elif retry_limit < 1:
-            raise SystemExit("Retry limit exceeded.")
+            raise RetryLimitExceededError("Retry limit for entering API key exceeded.")
         else:
             psi_api_key = reprompt
         retry_limit -= 1

@@ -1,5 +1,7 @@
 import sys
 
+from keyring.errors import KeyringError
+
 from .api.request import run_requests
 from .api.response import process_excel, process_json
 from .cli.commands import arg_group_to_dict, create_arg_groups, set_up_arg_parser
@@ -49,7 +51,11 @@ def main() -> None:
     elif url is not None:
         request_urls = [url]  # Only request a single page's URL
 
-    responses = run_requests(request_urls, api_args_dict)
+    try:
+        responses = run_requests(request_urls, api_args_dict)
+    # Let this exception bubble up from `api/request.py`
+    except KeyringError as err:
+        sys.exit(err)
 
     for num, response in enumerate(responses):
         if json_output:
