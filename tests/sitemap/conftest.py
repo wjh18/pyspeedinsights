@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pytest
 import requests
 from requests.exceptions import HTTPError, RequestException
@@ -8,7 +10,9 @@ from pyspeedinsights.core.sitemap import get_sitemap_root
 class MockResponse:
     """Mock response used to patch requests.Response objects"""
 
-    def __init__(self, text: str, status_code: int, exception: RequestException = None):
+    def __init__(
+        self, text: str, status_code: int, exception: Optional[RequestException] = None
+    ):
         self.text = text  # requests.Response.text
         self.status_code = status_code  # requests.Response.status_code
         self.exception = exception  # Custom exception

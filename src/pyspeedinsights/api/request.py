@@ -2,7 +2,7 @@
 
 import asyncio
 from collections import Counter
-from typing import Any, Coroutine, Union
+from typing import Any, Coroutine, Optional, Union
 
 import aiohttp
 
@@ -15,12 +15,12 @@ next_delay = 1  # Global for applying a 1s delay between requests
 
 async def get_response(
     url: str,
-    category: str = None,
-    locale: str = None,
-    strategy: str = None,
-    utm_campaign: str = None,
-    utm_source: str = None,
-    captcha_token: str = None,
+    category: Optional[str] = None,
+    locale: Optional[str] = None,
+    strategy: Optional[str] = None,
+    utm_campaign: Optional[str] = None,
+    utm_source: Optional[str] = None,
+    captcha_token: Optional[str] = None,
 ) -> dict:
     """Makes async GET calls to the PSI API for the requested page's URL.
 
