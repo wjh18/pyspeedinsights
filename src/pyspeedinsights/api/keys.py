@@ -29,7 +29,8 @@ def get_api_key() -> str:
     Returns:
         A str representing the PSI API key.
     Raises:
-        SystemExit: The user terminated the reprompt.
+        InputTerminatedError: The user terminated the reprompt.
+        RetryLimitExceededError: The reprompt limit was exceeded.
     """
     try:
         # get_password() returns None for an empty key
