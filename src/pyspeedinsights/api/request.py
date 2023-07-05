@@ -8,8 +8,8 @@ from typing import Any, Coroutine, Optional, Union
 import aiohttp
 
 from ..utils.generic import remove_nonetype_dict_items
-from ..utils.urls import validate_url
-from .keys import get_api_key
+from ..utils.urls import InvalidURLError, validate_url
+from .keys import KeyringError, get_api_key
 
 logger = logging.getLogger(__name__)
 next_delay = 1  # Global for applying a 1s delay between requests
@@ -96,6 +96,20 @@ async def gather_responses(tasks: list[Coroutine]) -> list[dict]:
     """Gathers tasks and awaits the return of the responses for processing."""
     logger.info(f"Gathering {len(tasks)} URL(s) and scheduling tasks.")
     responses = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Generator expression for bubbling up critical exceptions (handled in main())
+    # Purposefully explicit here to avoid raising exceptions for aiohttp.ClientError,
+    # as we don't want a single client failure to invalidate the entire run.
+    critical_exception = next(
+        (
+            r
+            for r in responses
+            if isinstance(r, KeyringError) or isinstance(r, InvalidURLError)
+        ),
+        None,
+    )
+    if critical_exception is not None:
+        raise critical_exception
 
     type_counts = Counter(type(r) for r in responses)
     c_success, c_fail = type_counts[dict], type_counts[aiohttp.ClientError]
