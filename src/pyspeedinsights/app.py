@@ -24,11 +24,12 @@ def main() -> None:
     """
     logging.basicConfig(
         level=logging.INFO,
-        format="%(levelname)s\t%(asctime)s\t\t%(message)s",
+        style="{",
+        format="[{asctime}] {levelname:^8s} --- {message} ({filename}:{lineno})",
         handlers=(logging.FileHandler("psi.log"), logging.StreamHandler()),
     )
     logger = logging.getLogger(__name__)
-    logger.info("Starting.")
+    logger.info("---Starting---")
 
     parser = set_up_arg_parser()
     args = parser.parse_args()
