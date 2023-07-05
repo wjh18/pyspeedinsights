@@ -8,6 +8,7 @@ from .cli.commands import arg_group_to_dict, create_arg_groups, set_up_arg_parse
 from .core.excel import ExcelWorkbook
 from .core.sitemap import SitemapError, process_sitemap, request_sitemap
 from .utils.generic import remove_dupes_from_list
+from .utils.urls import InvalidURLError
 
 
 def main() -> None:
@@ -46,15 +47,16 @@ def main() -> None:
         try:
             sitemap = request_sitemap(url)
             request_urls = remove_dupes_from_list(process_sitemap(sitemap))
-        except SitemapError as err:
+        # Let this exceptions bubble up from `core/sitemap.py`
+        except (SitemapError, InvalidURLError) as err:
             sys.exit(err)
     elif url is not None:
         request_urls = [url]  # Only request a single page's URL
 
     try:
         responses = run_requests(request_urls, api_args_dict)
-    # Let this exception bubble up from `api/request.py`
-    except KeyringError as err:
+    # Let these exceptions bubble up from `api/request.py`
+    except (KeyringError, InvalidURLError) as err:
         sys.exit(err)
 
     for num, response in enumerate(responses):

@@ -3,6 +3,10 @@
 from urllib.parse import urlsplit
 
 
+class InvalidURLError(Exception):
+    """A base exception for an invalid URL format."""
+
+
 def validate_url(url: str) -> str:
     """Checks that a URL is valid and fully-qualified.
 
@@ -28,7 +32,7 @@ def validate_url(url: str) -> str:
         path_before_host = p_sep < dot and p_sep > 0
         no_host = "." not in u.path
         if path_before_host or no_host:
-            raise SystemExit(err)
+            raise InvalidURLError(err)
         else:
             replacements["netloc"] = u.path
             replacements["path"] = ""
