@@ -1,5 +1,6 @@
 """Excel workbook operations for writing PSI API results to Excel."""
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any, TypeAlias, Union, cast
 
@@ -8,6 +9,8 @@ from xlsxwriter.format import Format
 
 AuditResults: TypeAlias = dict[str, tuple[Union[int, float]]]
 MetricsResults: TypeAlias = Union[dict[str, Union[int, float]], None]
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -27,12 +30,15 @@ class ExcelWorkbook:
         """Creates the workbook, adds a worksheet, and sets up column headings."""
         self._create_workbook()
         self.worksheet = self.workbook.add_worksheet()
+        logger.info("Excel worksheet created in workbook.")
+
         self.cur_cell = [0, 0]
         row, col = self.cur_cell  # First cell
         column_format = self._column_format()
         metadata_format = self._metadata_format()
 
         # Add metadata to the first cell of the Excel sheet.
+        logger.info("Writing metadata to worksheet.")
         category = self.metadata["category"].upper()
         strategy = self.metadata["strategy"].upper()
         metadata_value = f"{strategy} {category} REPORT"
@@ -54,22 +60,24 @@ class ExcelWorkbook:
 
     def write_to_worksheet(self, first_resp: bool) -> None:
         """Writes the URL, OVR page score, audit and metrics results to the sheet."""
-        if self.worksheet is not None:
-            self._write_page_url()
-            self._write_overall_category_score()
-            self._write_audit_results(self.audit_results, first_resp)
-            self._write_metrics_results(self.metrics_results, first_resp)
+        if self.worksheet is None:
+            # Fallback if worksheet doesn't exist for some reason
+            logger.warning("Worksheet not found. Creating.")
+            self.set_up_worksheet()
 
-            self.cur_cell[0] += 1  # Move down 1 row for next page's results
-            self.cur_cell[1] = 5  # Reset to first results column
-        else:
-            raise ValueError("The worksheet is not set up.")
+        self._write_page_url()
+        self._write_overall_category_score()
+        self._write_audit_results(self.audit_results, first_resp)
+        self._write_metrics_results(self.metrics_results, first_resp)
+
+        self.cur_cell[0] += 1  # Move down 1 row for next page's results
+        self.cur_cell[1] = 5  # Reset to first results column
 
     def finalize_and_save(self) -> None:
-        """Writes the average score to the workbook and saves/closes it."""
+        """Writes the average score to the worksheet and saves/closes it."""
         self._write_average_score()
         self.workbook.close()
-        print("Workbook saved. Check your current directory!")
+        logger.info("Workbook saved. Check your current directory!")
 
     def _create_workbook(self) -> None:
         """Creates an Excel workbook with a unique and descriptive name."""
@@ -77,9 +85,11 @@ class ExcelWorkbook:
         category = self.metadata["category"]
         date = self.metadata["timestamp"]
         self.workbook = Workbook(f"psi-s-{strategy}-c-{category}-{date}.xlsx")
+        logger.info("Excel workbook created.")
 
     def _write_page_url(self) -> None:
         """Writes the requested page URL being analyzed to the sheet."""
+        logger.info("Writing page URL to worksheet.")
         url_format = self._url_format()
         row = self.cur_cell[0] + 2
         self.worksheet.merge_range(
@@ -88,6 +98,7 @@ class ExcelWorkbook:
 
     def _write_overall_category_score(self) -> None:
         """Writes the OVR category score for the page to the sheet."""
+        logger.info("Writing overall category score to worksheet.")
         category_score = self.metadata["category_score"] * 100
         cat_score_format = self._score_format(category_score)
 
@@ -100,6 +111,7 @@ class ExcelWorkbook:
 
     def _write_average_score(self) -> None:
         """Writes the average score next to the worksheet metadata."""
+        logger.info("Writing average score to worksheet.")
         scores = self.category_scores
         avg_score = sum(scores) / len(scores)
         avg_score = round(avg_score, 2)
@@ -113,12 +125,14 @@ class ExcelWorkbook:
         column_format = self._column_format()
         row, col = self.cur_cell
 
+        logger.info("Writing audit results to worksheet.")
         for title, scores in audit_results.items():
             self.worksheet.set_column(col, col + 1, 15)
             # cast() is a mypy workaround for issue #1178
             score, value = cast(tuple[Any, Any], scores)
             score_format = self._score_format(score)
             if first_resp:
+                logger.info("Writing audit result headings to worksheet.")
                 self._write_results_headings(
                     row, col, title, column_format, result_type="audit"
                 )
@@ -137,9 +151,11 @@ class ExcelWorkbook:
         row, col = self.cur_cell
 
         if metrics_results is not None:
+            logger.info("Writing metrics results to worksheet.")
             for title, score in metrics_results.items():
                 self.worksheet.set_column(col, col, 30)
                 if first_resp:
+                    logger.info("Writing metrics result headings to worksheet.")
                     self._write_results_headings(
                         row, col, title, column_format, result_type="metrics"
                     )

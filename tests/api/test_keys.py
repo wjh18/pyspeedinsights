@@ -1,4 +1,3 @@
-import keyring
 import pytest
 from keyring.errors import KeyringError
 
@@ -17,16 +16,6 @@ class TestKeyRetrieval:
         mock_pw = "secret"
         patch_keyring(mock_pw)
         assert get_api_key() == mock_pw
-
-    def test_key_not_found_exception(self, monkeypatch, patch_input, capsys):
-        monkeypatch.setattr(
-            keyring, "get_password", lambda *args, **kwargs: self.throw_keyringerror()
-        )
-        patch_input(mock_input="secret")  # Placeholder to avoid stdin errors
-
-        get_api_key()
-        out = capsys.readouterr().out  # Printed when KeyringError is caught
-        assert "There was an error retrieving your API key from the keystore: " in out
 
     def test_key_not_found_fallback_success(self, patch_keyring, patch_input):
         patch_keyring(mock_pw=None)

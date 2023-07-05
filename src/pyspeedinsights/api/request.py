@@ -1,6 +1,7 @@
 """Async request preparation and processing for PSI API calls."""
 
 import asyncio
+import logging
 from collections import Counter
 from typing import Any, Coroutine, Optional, Union
 
@@ -10,6 +11,7 @@ from ..utils.generic import remove_nonetype_dict_items
 from ..utils.urls import validate_url
 from .keys import get_api_key
 
+logger = logging.getLogger(__name__)
 next_delay = 1  # Global for applying a 1s delay between requests
 
 
@@ -50,9 +52,10 @@ async def get_response(
     # Add a 1s delay between calls to avoid 500 errors from server.
     global next_delay
     next_delay += 1
+    logger.debug("Sleeping request to prevent server errors.")
     await asyncio.sleep(next_delay)
 
-    print(f"Sending request... ({req_url})")
+    logger.info(f"Sending request... ({req_url})")
     # Make async call with query params to PSI API and await response.
     async with aiohttp.ClientSession() as session:
         async with session.get(url=base_url, params=params) as resp:
@@ -62,18 +65,18 @@ async def get_response(
                 try:
                     resp.raise_for_status()
                     json_resp = await resp.json()
-                    print(f"Request successful! ({req_url})")
+                    logger.info(f"Request successful! ({req_url})")
                 except aiohttp.ClientError as err_c:
                     if retry_attempts < 1:
-                        print(err_c)
-                        print(f"Retry limit reached. Skipping ({req_url})")
+                        logger.error(err_c)
+                        logger.warning(
+                            f"Retry limit for URL reached. Skipping ({req_url})"
+                        )
                         raise aiohttp.ClientError(err_c)
                     else:
                         retry_attempts -= 1
-                        print(
-                            "Request failed. Retrying... ",
-                            f"{retry_attempts} retries left ({req_url})",
-                        )
+                        logger.warning("Request failed. Retrying.")
+                        logger.info(f"{retry_attempts} retries left ({req_url})")
                         await asyncio.sleep(1)
     return json_resp
 
@@ -91,15 +94,14 @@ def run_requests(
 
 async def gather_responses(tasks: list[Coroutine]) -> list[dict]:
     """Gathers tasks and awaits the return of the responses for processing."""
-    print(f"Preparing {len(tasks)} URL(s)...")
+    logger.info(f"Gathering {len(tasks)} URL(s) and scheduling tasks.")
     responses = await asyncio.gather(*tasks, return_exceptions=True)
 
     type_counts = Counter(type(r) for r in responses)
     c_success, c_fail = type_counts[dict], type_counts[aiohttp.ClientError]
-    print(
-        f"{c_success}/{len(tasks)} URL(s) processed successfully. ",
-        f"{c_fail} skipped due to errors.",
-    )
+    logger.info(f"{c_success}/{len(tasks)} URL(s) processed successfully. ")
+    logger.warning(f"{c_fail} skipped due to errors. Removing failed URL(s).")
+
     # Remove failures for response processing
     responses = [r for r in responses if type(r) == dict]
     return responses
@@ -109,6 +111,7 @@ def get_tasks(
     request_urls: list[str], api_args_dict: dict[str, Any]
 ) -> list[Coroutine]:
     """Creates a list of tasks that call get_response() with request params."""
+    logger.info("Creating list of tasks based on parsed URL(s).")
     tasks = []
     for url in request_urls:
         api_args_dict["url"] = url
