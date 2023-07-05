@@ -18,7 +18,7 @@ def validate_url(url: str) -> str:
     Returns:
         The sanitized URL as a str.
     Raises:
-        SystemExit: The user entered a URL without a path that has no domain
+        InvalidURLError: The user entered a URL without a path that has no domain
         or a URL whose path precedes the hostname (e.g. path/example.com).
     """
     err = "Invalid URL. Please enter a valid fully-qualified URL."
