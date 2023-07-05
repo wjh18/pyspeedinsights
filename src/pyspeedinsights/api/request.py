@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import ssl
 from collections import Counter
 from typing import Any, Coroutine, Optional, Union
 
@@ -100,14 +101,25 @@ async def gather_responses(tasks: list[Coroutine]) -> list[dict]:
     # Generator expression for bubbling up critical exceptions (handled in main())
     # Purposefully explicit here to avoid raising exceptions for aiohttp.ClientError,
     # as we don't want a single client failure to invalidate the entire run.
+    # OSError and ssl errors are all subclassed by aiohttp exceptions.
     critical_exception = next(
         (
             r
             for r in responses
-            if isinstance(r, KeyringError) or isinstance(r, InvalidURLError)
+            if isinstance(
+                r,
+                (
+                    KeyringError,
+                    InvalidURLError,
+                    OSError,
+                    ssl.SSLError,
+                    ssl.CertificateError,
+                ),
+            )
         ),
         None,
     )
+
     if critical_exception is not None:
         raise critical_exception
 

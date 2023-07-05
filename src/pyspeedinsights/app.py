@@ -1,4 +1,5 @@
 import logging
+import ssl
 import sys
 
 from keyring.errors import KeyringError
@@ -72,7 +73,13 @@ def main() -> None:
     try:
         responses = run_requests(request_urls, api_args_dict)
     # Let these exceptions bubble up from `api/request.py`
-    except (KeyringError, InvalidURLError) as err:
+    except (
+        KeyringError,
+        InvalidURLError,
+        OSError,
+        ssl.SSLError,
+        ssl.CertificateError,
+    ) as err:
         logger.critical(err)
         sys.exit(1)
 

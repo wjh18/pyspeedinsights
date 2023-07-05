@@ -41,6 +41,9 @@ def validate_url(url: str) -> str:
         else:
             replacements["netloc"] = u.path
             replacements["path"] = ""
+    elif "." not in u.netloc:
+        # URLs with schemes but no TLD
+        raise InvalidURLError(err)  # Logged as CRITICAL in main()
 
     replacements["fragment"] = ""
     replacements["query"] = ""

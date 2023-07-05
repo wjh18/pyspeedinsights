@@ -18,6 +18,9 @@ class TestValidateUrl:
     def test_url_without_tld_exits(self):
         self.raises_invalid_url("badurl")
 
+    def test_url_without_tld_with_scheme_exits(self):
+        self.raises_invalid_url("https://badurl")
+
     def test_url_without_tld_with_path_exits(self):
         self.raises_invalid_url("badurl/path")
 
