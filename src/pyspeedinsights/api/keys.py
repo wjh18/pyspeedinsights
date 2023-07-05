@@ -42,7 +42,8 @@ def get_api_key() -> str:
         psi_api_key = keyring.get_password("system", "psikey")
     except KeyringError as err:
         logger.error(
-            f"There was an error retrieving your API key from the keystore: {err}"
+            f"There was an error retrieving your API key from the keystore: {err}",
+            exc_info=True,
         )
         psi_api_key = None
 

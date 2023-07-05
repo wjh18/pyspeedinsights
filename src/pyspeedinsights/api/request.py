@@ -69,7 +69,7 @@ async def get_response(
                     logger.info(f"Request successful! ({req_url})")
                 except aiohttp.ClientError as err_c:
                     if retry_attempts < 1:
-                        logger.error(err_c)
+                        logger.error(err_c, exc_info=True)
                         logger.warning(
                             f"Retry limit for URL reached. Skipping ({req_url})"
                         )

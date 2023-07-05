@@ -65,7 +65,7 @@ def main() -> None:
             request_urls = remove_dupes_from_list(process_sitemap(sitemap))
         # Let these exceptions bubble up from `core/sitemap.py`
         except (SitemapError, InvalidURLError) as err:
-            logger.critical(err)
+            logger.critical(err, exc_info=True)
             sys.exit(1)
     elif url is not None:
         logger.info("Sitemap format not specified. Only 1 URL to process.")
@@ -81,7 +81,7 @@ def main() -> None:
         ssl.SSLError,
         ssl.CertificateError,
     ) as err:
-        logger.critical(err)
+        logger.critical(err, exc_info=True)
         sys.exit(1)
 
     logger.info("Processing response data.")
@@ -100,7 +100,9 @@ def main() -> None:
                 # For now, log this as critical and exit.
                 # A better solution would be to preserve the original request URL
                 # as a fallback. Temporarily, this is more helpful than just KeyError.
-                logger.critical(f"The response data contains no URL: {err}")
+                logger.critical(
+                    f"The response data contains no URL: {err}", exc_info=True
+                )
                 sys.exit(1)
 
             if not excel_results:

@@ -41,14 +41,14 @@ def process_excel(
         metadata = _parse_metadata(json_resp, category)
         audit_results = _parse_audits(audits_base)
     except JSONKeyError as err:
-        logger.error(f"{json_err}{err}")
+        logger.error(f"{json_err}{err}", exc_info=True)
         return {}
 
     if metrics is not None and category == "performance":
         try:
             metrics_results = _parse_metrics(audits_base, metrics)
         except JSONKeyError as err:
-            logger.error(f"{json_err}{err}")
+            logger.error(f"{json_err}{err}", exc_info=True)
             return {}
     else:
         logger.warning("Skipping metrics (not chosen or non-performance category)")
