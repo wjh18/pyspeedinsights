@@ -115,7 +115,9 @@ def _parse_metrics(metrics_base: dict) -> dict[str, Union[int, float]]:
     logger.info("Parsing metrics data from JSON response.")
     metrics_results = {}
     for metric, result in metrics_base.items():
-        metrics_results[metric] = result["distributions"][0]["proportion"]
+        score = result["distributions"][0]["proportion"]
+        score = round(score, 3) * 100
+        metrics_results[metric] = score
     # Ensure each metric is written to Excel under the same column.
     return sort_dict_alpha(metrics_results)
 

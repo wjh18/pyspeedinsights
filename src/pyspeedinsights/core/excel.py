@@ -141,7 +141,6 @@ class ExcelWorkbook:
     def _write_metrics_results(self, first_resp: bool) -> None:
         """Iterates through the metrics results and writes them to the worksheet."""
         column_format = self._column_format()
-        data_format = self._data_format()
         row, col = self.cur_cell
 
         if self.metrics_results is not None:
@@ -153,7 +152,8 @@ class ExcelWorkbook:
                     self._write_results_headings(
                         row, col, title, column_format, result_type="metrics"
                     )
-                self.worksheet.write(row + 2, col, score, data_format)
+                score_format = self._score_format(score)
+                self.worksheet.write(row + 2, col, score, score_format)
                 col += 1
 
             self.cur_cell[1] = col + 2  # Don't overwrite metrics with audits
