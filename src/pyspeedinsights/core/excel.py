@@ -24,6 +24,7 @@ class ExcelWorkbook:
     workbook: Workbook = None
     worksheet: Workbook.worksheet_class = None
     cur_cell: list[int] = field(default_factory=list)
+    category_scores: list[int] = field(default_factory=list)
     metrics_scores: list[int | float] = field(default_factory=list)
 
     def set_up_worksheet(self) -> None:
@@ -66,6 +67,7 @@ class ExcelWorkbook:
             self.set_up_worksheet()
 
         self._write_page_url()
+        self._write_overall_category_score()
         self._write_metrics_results(first_resp)
         self._write_audit_results(first_resp)
 
@@ -95,19 +97,33 @@ class ExcelWorkbook:
             row, 0, row, self.cur_cell[1] - 1, self.url, url_format
         )
 
+    def _write_overall_category_score(self) -> None:
+        """Writes the OVR category score for the page to the sheet."""
+        logger.info("Writing overall category score to worksheet.")
+        category_score = self.metadata["category_score"] * 100
+        cat_score_format = self._score_format(category_score)
+
+        self.worksheet.write(
+            self.cur_cell[0] + 2, self.cur_cell[1], category_score, cat_score_format
+        )
+        self.cur_cell[1] += 2
+        # Add the score to a list so they can all be averaged at the end.
+        self.category_scores.append(category_score)
+
     def _write_average_scores(self) -> None:
         """Writes the average scores next to the worksheet metadata."""
         logger.info("Writing average scores to worksheet.")
         format = self._metadata_format()
 
-        cat_score = self.metadata["category_score"] * 100
-        cat_score = round(cat_score, 1)
+        # Audits avg
+        cat_scores = self.category_scores
+        cat_score = self._avg_and_round_scores(cat_scores)
         self.worksheet.write(0, 4, f"Cat. Score: {str(cat_score)}", format)
 
-        if self.metrics_results is not None:
+        # Metrics avg
+        if self.metrics_scores:
             m_scores = self.metrics_scores
-            avg_m_score = sum(m_scores) / len(m_scores)
-            avg_m_score = round(avg_m_score, 1)
+            avg_m_score = self._avg_and_round_scores(m_scores)
             self.worksheet.write(0, 7, f"Metrics Avg: {str(avg_m_score)}", format)
 
     def _write_audit_results(self, first_resp: bool) -> None:
@@ -137,6 +153,7 @@ class ExcelWorkbook:
 
         if self.metrics_results is not None:
             logger.info("Writing metrics results to worksheet.")
+            ovr_score = 0
             for title, score in self.metrics_results.items():
                 self.worksheet.set_column(col, col, 10)
                 if first_resp:
@@ -146,10 +163,20 @@ class ExcelWorkbook:
                     )
                 score_format = self._score_format(score)
                 self.worksheet.write(row + 2, col, score, score_format)
-                self.metrics_scores.append(score)
+                ovr_score += score
                 col += 1
 
+            # For indiv. URL - will be averaged at the end
+            ovr_score = ovr_score / len(self.metrics_results)
+            ovr_score = round(ovr_score, 1)
+            self.metrics_scores.append(ovr_score)
+
             self.cur_cell[1] = col + 2  # Don't overwrite metrics with audits
+
+        elif self.metrics_scores:
+            # No metrics results for this URL but previous URLs have written scores
+            # Needed for formatting reasons (set column to align with audit scores)
+            self.cur_cell[1] = 16
 
     def _write_results_headings(
         self, row: int, col: int, title: str, column_format: Format, result_type: str
@@ -162,6 +189,11 @@ class ExcelWorkbook:
         elif result_type == "metrics":
             self.worksheet.write(row, col, title, column_format)
             self.worksheet.write(row + 1, col, "Score", column_format)
+
+    def _avg_and_round_scores(self, scores):
+        """Helper for averaging and rounding scores."""
+        scores = sum(scores) / len(scores)
+        return round(scores, 1)
 
     def _column_format(self) -> Format:
         """Reusable formatting for column cells."""
