@@ -1,5 +1,6 @@
 from pyspeedinsights.api.response import (
     _get_audits_base,
+    _get_metrics_base,
     _get_timestamp,
     _parse_audits,
     _parse_metadata,
@@ -158,6 +159,12 @@ class TestParseMetrics:
 def test_get_audits_base():
     json_resp = {"lighthouseResult": {"audits": "base"}}
     audits_base = _get_audits_base(json_resp)
+    assert audits_base == "base"
+
+
+def test_get_metrics_base():
+    json_resp = {"loadingExperience": {"metrics": "base"}}
+    audits_base = _get_metrics_base(json_resp)
     assert audits_base == "base"
 
 
