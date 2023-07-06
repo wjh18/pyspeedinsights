@@ -65,7 +65,7 @@ def process_excel(
 
 def _parse_metadata(json_resp: dict, category: str) -> dict[str, Union[str, int]]:
     """Parses various metadata from the JSON response to write to Excel."""
-    logger.info("Parsing metadata from response.")
+    logger.info("Parsing metadata from JSON response.")
 
     json_base = json_resp["lighthouseResult"]
     strategy = json_base["configSettings"]["formFactor"]
@@ -90,7 +90,7 @@ def _parse_audits(audits_base: dict) -> dict[str, tuple[Union[int, float]]]:
         A dict of audit results with audit names as keys and tuples of length 2
         as values containing the audit scores and numeric values, respectively.
     """
-    logger.info("Parsing audit data from response.")
+    logger.info("Parsing audit data from JSON response.")
 
     audit_results = {}
     # Create results dict with scores and numerical values for each audit.

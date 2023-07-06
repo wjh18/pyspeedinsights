@@ -8,7 +8,12 @@ from .api.request import run_requests
 from .api.response import process_excel, process_json
 from .cli.commands import arg_group_to_dict, create_arg_groups, set_up_arg_parser
 from .core.excel import ExcelWorkbook
-from .core.sitemap import SitemapError, process_sitemap, request_sitemap
+from .core.sitemap import (
+    SitemapError,
+    process_sitemap,
+    request_sitemap,
+    validate_sitemap_url,
+)
 from .utils.exceptions import JSONKeyError
 from .utils.generic import remove_dupes_from_list
 from .utils.urls import InvalidURLError
@@ -69,6 +74,11 @@ def main() -> None:
             sys.exit(1)
     elif url is not None:
         logger.info("Sitemap format not specified. Only 1 URL to process.")
+        if validate_sitemap_url(url):
+            logger.critical(
+                "Sitemaps can only be processed if sitemap format is specified."
+            )
+            sys.exit(1)
         request_urls = [url]
 
     try:

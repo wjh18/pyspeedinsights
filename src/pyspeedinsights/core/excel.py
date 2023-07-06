@@ -132,7 +132,7 @@ class ExcelWorkbook:
             score, value = cast(tuple[Any, Any], scores)
             score_format = self._score_format(score)
             if first_resp:
-                logger.info("Writing audit result headings to worksheet.")
+                logger.debug("Writing audit result headings to worksheet.")
                 self._write_results_headings(
                     row, col, title, column_format, result_type="audit"
                 )
@@ -155,7 +155,7 @@ class ExcelWorkbook:
             for title, score in metrics_results.items():
                 self.worksheet.set_column(col, col, 30)
                 if first_resp:
-                    logger.info("Writing metrics result headings to worksheet.")
+                    logger.debug("Writing metrics result headings to worksheet.")
                     self._write_results_headings(
                         row, col, title, column_format, result_type="metrics"
                     )
