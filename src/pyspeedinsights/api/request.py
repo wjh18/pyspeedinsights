@@ -17,6 +17,7 @@ next_delay = 1  # Global for applying a 1s delay between requests
 
 
 async def get_response(
+    key: str,
     url: str,
     category: Optional[str] = None,
     locale: Optional[str] = None,
@@ -37,6 +38,7 @@ async def get_response(
     base_url = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
     url = validate_url(url)
     params = {
+        "key": key,
         "url": url,
         "category": category,
         "locale": locale,
@@ -47,7 +49,6 @@ async def get_response(
     }
     # Use API defaults instead of passing None values as query params.
     params = remove_nonetype_dict_items(params)
-    params["key"] = get_api_key()
     req_url = params["url"]
 
     # Add a 1s delay between calls to avoid 500 errors from server.
@@ -138,8 +139,10 @@ def get_tasks(
 ) -> list[Coroutine]:
     """Creates a list of tasks that call get_response() with request params."""
     logger.info("Creating list of tasks based on parsed URL(s).")
+    key = get_api_key()
     tasks = []
     for url in request_urls:
         api_args_dict["url"] = url
+        api_args_dict["key"] = key
         tasks.append(get_response(**api_args_dict))
     return tasks
