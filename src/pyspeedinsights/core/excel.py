@@ -146,7 +146,7 @@ class ExcelWorkbook:
         if self.metrics_results is not None:
             logger.info("Writing metrics results to worksheet.")
             for title, score in self.metrics_results.items():
-                self.worksheet.set_column(col, col, 30)
+                self.worksheet.set_column(col, col, 10)
                 if first_resp:
                     logger.debug("Writing metrics result headings to worksheet.")
                     self._write_results_headings(
