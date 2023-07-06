@@ -100,9 +100,9 @@ class ExcelWorkbook:
         logger.info("Writing average scores to worksheet.")
         format = self._metadata_format()
 
-        avg_a_score = self.metadata["category_score"] * 100
-        avg_a_score = round(avg_a_score, 1)
-        self.worksheet.write(0, 4, f"Audits Avg: {str(avg_a_score)}", format)
+        cat_score = self.metadata["category_score"] * 100
+        cat_score = round(cat_score, 1)
+        self.worksheet.write(0, 4, f"Cat. Score: {str(cat_score)}", format)
 
         if self.metrics_results is not None:
             m_scores = self.metrics_scores
