@@ -24,7 +24,7 @@ class ExcelWorkbook:
     workbook: Workbook = None
     worksheet: Workbook.worksheet_class = None
     cur_cell: list[int] = field(default_factory=list)
-    category_scores: list[int] = field(default_factory=list)
+    metrics_scores: list[int] = field(default_factory=list)
 
     def set_up_worksheet(self) -> None:
         """Creates the workbook, adds a worksheet, and sets up column headings."""
@@ -66,7 +66,6 @@ class ExcelWorkbook:
             self.set_up_worksheet()
 
         self._write_page_url()
-        self._write_overall_category_score()
         self._write_metrics_results(first_resp)
         self._write_audit_results(first_resp)
 
@@ -75,7 +74,7 @@ class ExcelWorkbook:
 
     def finalize_and_save(self) -> None:
         """Writes the average score to the worksheet and saves/closes it."""
-        self._write_average_score()
+        self._write_average_scores()
         self.workbook.close()
         logger.info("Workbook saved. Check your current directory!")
 
@@ -96,27 +95,20 @@ class ExcelWorkbook:
             row, 0, row, self.cur_cell[1] - 1, self.url, url_format
         )
 
-    def _write_overall_category_score(self) -> None:
-        """Writes the OVR category score for the page to the sheet."""
-        logger.info("Writing overall category score to worksheet.")
-        category_score = self.metadata["category_score"] * 100
-        cat_score_format = self._score_format(category_score)
-
-        self.worksheet.write(
-            self.cur_cell[0] + 2, self.cur_cell[1], category_score, cat_score_format
-        )
-        self.cur_cell[1] += 2
-        # Add the score to a list so they can all be averaged at the end.
-        self.category_scores.append(category_score)
-
-    def _write_average_score(self) -> None:
-        """Writes the average score next to the worksheet metadata."""
-        logger.info("Writing average score to worksheet.")
-        scores = self.category_scores
-        avg_score = sum(scores) / len(scores)
-        avg_score = round(avg_score, 2)
+    def _write_average_scores(self) -> None:
+        """Writes the average scores next to the worksheet metadata."""
+        logger.info("Writing average scores to worksheet.")
         format = self._metadata_format()
-        self.worksheet.write(0, 4, f"Avg Score: {avg_score}", format)
+
+        avg_a_score = self.metadata["category_score"] * 100
+        avg_a_score = round(avg_a_score, 1)
+        self.worksheet.write(0, 4, f"Audits Avg: {str(avg_a_score)}", format)
+
+        if self.metrics_results is not None:
+            m_scores = self.metrics_scores
+            avg_m_score = sum(m_scores) / len(m_scores)
+            avg_m_score = round(avg_m_score, 1)
+            self.worksheet.write(0, 7, f"Metrics Avg: {str(avg_m_score)}", format)
 
     def _write_audit_results(self, first_resp: bool) -> None:
         """Iterates through the audit results and writes them to the worksheet."""
@@ -154,6 +146,7 @@ class ExcelWorkbook:
                     )
                 score_format = self._score_format(score)
                 self.worksheet.write(row + 2, col, score, score_format)
+                self.metrics_scores.append(score)
                 col += 1
 
             self.cur_cell[1] = col + 2  # Don't overwrite metrics with audits
