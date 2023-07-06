@@ -24,7 +24,7 @@ class ExcelWorkbook:
     workbook: Workbook = None
     worksheet: Workbook.worksheet_class = None
     cur_cell: list[int] = field(default_factory=list)
-    metrics_scores: list[int] = field(default_factory=list)
+    metrics_scores: list[int | float] = field(default_factory=list)
 
     def set_up_worksheet(self) -> None:
         """Creates the workbook, adds a worksheet, and sets up column headings."""
