@@ -1,5 +1,8 @@
+import pytest
+
 from pyspeedinsights.api.response import (
     _get_audits_base,
+    _get_metrics_base,
     _get_timestamp,
     _parse_audits,
     _parse_metadata,
@@ -9,7 +12,7 @@ from pyspeedinsights.api.response import (
 
 
 class TestProcessExcel:
-    def _get_json_resp(self, all_metrics, category="performance"):
+    def _get_json_resp(self, metrics_json, category="performance"):
         return {
             "analysisUTCTimestamp": "2023-02-26T17:36:18",
             "lighthouseResult": {
@@ -17,15 +20,14 @@ class TestProcessExcel:
                 "categories": {category: {"score": 1}},
                 "audits": {
                     "audit": {"score": 1, "numericValue": 300},
-                    "metrics": {"details": {"items": [all_metrics]}},
                 },
             },
+            "loadingExperience": {"metrics": metrics_json},
         }
 
-    def test_process_excel_performance_custom_metrics(self, all_metrics):
-        json_resp = self._get_json_resp(all_metrics)
-        metrics_to_use = ["observedFirstPaint", "totalCumulativeLayoutShift"]
-        results = process_excel(json_resp, "performance", metrics_to_use)
+    def test_process_excel_performance_gets_metrics(self, metrics_json):
+        json_resp = self._get_json_resp(metrics_json)
+        results = process_excel(json_resp, "performance")
         assert results == {
             "metadata": {
                 "category": "performance",
@@ -33,32 +35,21 @@ class TestProcessExcel:
                 "strategy": "desktop",
                 "timestamp": "2023-02-26_17.36.18",
             },
-            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
+            "audit_results": {"audit": (100, 300)},
             "metrics_results": {
-                "observedFirstPaint": 115,
-                "totalCumulativeLayoutShift": 0,
+                "CLS": 99.0,
+                "FCP": 98.0,
+                "LCP": 97.0,
+                "FID": 96.0,
+                "INP": 95.0,
+                "INP(E)": 94.0,
+                "TTFB(E)": 93.0,
             },
         }
 
-    def test_process_excel_performance_all_metrics(self, all_metrics):
-        json_resp = self._get_json_resp(all_metrics)
-        metrics_to_use = ["all"]
-        results = process_excel(json_resp, "performance", metrics_to_use)
-        assert results == {
-            "metadata": {
-                "category": "performance",
-                "category_score": 1,
-                "strategy": "desktop",
-                "timestamp": "2023-02-26_17.36.18",
-            },
-            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
-            "metrics_results": all_metrics,
-        }
-
-    def test_process_excel_non_performance_with_metrics(self, all_metrics):
-        json_resp = self._get_json_resp(all_metrics, "seo")
-        metrics_to_use = ["all"]
-        results = process_excel(json_resp, "seo", metrics_to_use)
+    def test_process_excel_non_performance_excludes_metrics(self, metrics_json):
+        json_resp = self._get_json_resp(metrics_json, "seo")
+        results = process_excel(json_resp, "seo")
         assert results == {
             "metadata": {
                 "category": "seo",
@@ -66,22 +57,7 @@ class TestProcessExcel:
                 "strategy": "desktop",
                 "timestamp": "2023-02-26_17.36.18",
             },
-            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
-            "metrics_results": None,
-        }
-
-    def test_process_excel_non_performance_without_metrics(self, all_metrics):
-        json_resp = self._get_json_resp(all_metrics, "seo")
-        metrics_to_use = None
-        results = process_excel(json_resp, "seo", metrics_to_use)
-        assert results == {
-            "metadata": {
-                "category": "seo",
-                "category_score": 1,
-                "strategy": "desktop",
-                "timestamp": "2023-02-26_17.36.18",
-            },
-            "audit_results": {"audit": (100, 300), "metrics": ("n/a", "n/a")},
+            "audit_results": {"audit": (100, 300)},
             "metrics_results": None,
         }
 
@@ -139,25 +115,33 @@ class TestParseAudits:
 
 
 class TestParseMetrics:
-    def test_parse_metrics_all(self, all_metrics):
-        audits_base = {"metrics": {"details": {"items": [all_metrics]}}}
-        metrics_to_use = ["all"]
-        metrics = _parse_metrics(audits_base, metrics_to_use)
-        assert metrics == all_metrics
-
-    def test_parse_metrics_custom(self, all_metrics):
-        audits_base = {"metrics": {"details": {"items": [all_metrics]}}}
-        metrics_to_use = ["observedFirstPaint", "totalCumulativeLayoutShift"]
-        metrics = _parse_metrics(audits_base, metrics_to_use)
+    def test_parse_metrics_scores(self, metrics_json):
+        metrics = _parse_metrics(metrics_json)
         assert metrics == {
-            "observedFirstPaint": 115,
-            "totalCumulativeLayoutShift": 0,
+            "CLS": 99.0,
+            "FCP": 98.0,
+            "LCP": 97.0,
+            "FID": 96.0,
+            "INP": 95.0,
+            "INP(E)": 94.0,
+            "TTFB(E)": 93.0,
         }
+
+    def test_missing_metric_raises_keyerror(self, metrics_json):
+        del metrics_json["CUMULATIVE_LAYOUT_SHIFT_SCORE"]
+        with pytest.raises(KeyError):
+            _parse_metrics(metrics_json)
 
 
 def test_get_audits_base():
     json_resp = {"lighthouseResult": {"audits": "base"}}
     audits_base = _get_audits_base(json_resp)
+    assert audits_base == "base"
+
+
+def test_get_metrics_base():
+    json_resp = {"loadingExperience": {"metrics": "base"}}
+    audits_base = _get_metrics_base(json_resp)
     assert audits_base == "base"
 
 

@@ -1,16 +1,23 @@
 """Response processing and parsing for PSI API results."""
 
-import copy
 import json
 import logging
 from datetime import datetime
-from typing import Optional, Union
+from typing import Union
 
-from ..cli.choices import COMMAND_CHOICES
-from ..utils.exceptions import JSONKeyError
 from ..utils.generic import sort_dict_alpha
 
 logger = logging.getLogger(__name__)
+
+METRICS_ABBR = {
+    "CUMULATIVE_LAYOUT_SHIFT_SCORE": "CLS",
+    "EXPERIMENTAL_INTERACTION_TO_NEXT_PAINT": "INP(E)",
+    "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "TTFB(E)",
+    "FIRST_CONTENTFUL_PAINT_MS": "FCP",
+    "FIRST_INPUT_DELAY_MS": "FID",
+    "INTERACTION_TO_NEXT_PAINT": "INP",
+    "LARGEST_CONTENTFUL_PAINT_MS": "LCP",
+}
 
 
 def process_json(json_resp: dict, category: str, strategy: str) -> None:
@@ -27,9 +34,7 @@ def process_json(json_resp: dict, category: str, strategy: str) -> None:
         logger.info("JSON processed. Check your current working directory.")
 
 
-def process_excel(
-    json_resp: dict, category: str, metrics: Optional[list[str]]
-) -> dict[str, Union[dict, None]]:
+def process_excel(json_resp: dict, category: str) -> dict[str, Union[dict, None]]:
     """Calls various parsing operations for Excel / Sitemap formats.
 
     Called within main() in pyspeedinsights.app.
@@ -40,18 +45,21 @@ def process_excel(
         audits_base = _get_audits_base(json_resp)  # Location of audits in json response
         metadata = _parse_metadata(json_resp, category)
         audit_results = _parse_audits(audits_base)
-    except JSONKeyError as err:
+    except KeyError as err:
         logger.error(f"{json_err}{err}", exc_info=True)
         return {}
 
-    if metrics is not None and category == "performance":
+    if category == "performance":
         try:
-            metrics_results = _parse_metrics(audits_base, metrics)
-        except JSONKeyError as err:
-            logger.error(f"{json_err}{err}", exc_info=True)
-            return {}
+            metrics_base = _get_metrics_base(
+                json_resp
+            )  # Loc of metrics in json response
+            metrics_results = _parse_metrics(metrics_base)
+        except KeyError as err:
+            logger.error(f"Metrics not available for this report: {err}", exc_info=True)
+            metrics_results = None
     else:
-        logger.warning("Skipping metrics (not chosen or non-performance category)")
+        logger.warning("Skipping metrics (non-performance category)")
         metrics_results = None
 
     results: dict[str, Union[dict, None]] = {
@@ -105,38 +113,38 @@ def _parse_audits(audits_base: dict) -> dict[str, tuple[Union[int, float]]]:
     return sort_dict_alpha(audit_results)
 
 
-def _parse_metrics(
-    audits_base: dict, metrics: list[str]
-) -> dict[str, Union[int, float]]:
-    """Parses performance metrics from the JSON response to write to Excel.
+def _parse_metrics(metrics_base: dict) -> dict[str, Union[int, float]]:
+    """Parses performance metric scores from the JSON response to write to Excel.
 
-    Metrics have no scores associated with them.
+    Real-user experience data from CrUX dataset.
 
     Returns:
         A dict of metrics results with metric names as keys
-        and int or float metrics as values.
+        and their scores as values.
     """
-    if "all" in metrics:
-        logger.info("Parsing all metrics.")
-        metrics_to_use = copy.copy(COMMAND_CHOICES["metrics"])
-        # Remove 'all' to avoid key errors, as it doesn't exist in JSON resp.
-        if type(metrics_to_use) == list:
-            metrics_to_use.remove("all")
-    else:
-        logger.info("Parsing chosen metrics.")
-        metrics_to_use = metrics
-
-    # Create new dict of metrics based on user's chosen metrics.
+    logger.info("Parsing metrics data from JSON response.")
     metrics_results = {}
-    metrics_loc = audits_base["metrics"]["details"]["items"][0]
-    metrics_results = {field: metrics_loc[field] for field in metrics_to_use}
-    # Sort dict alphabetically so each metric is written to Excel in the same order.
-    return sort_dict_alpha(metrics_results)
+    for metric, result in metrics_base.items():
+        try:
+            abbr = METRICS_ABBR[metric]
+        except KeyError:
+            abbr = metric
+        score = result["distributions"][0]["proportion"]
+        score = round(score, 3) * 100
+        metrics_results[abbr] = score
+    # Ensure each metric is written to Excel under the same column.
+    desired_order_list = ("CLS", "FCP", "LCP", "FID", "INP", "INP(E)", "TTFB(E)")
+    return {k: metrics_results[k] for k in desired_order_list}
 
 
 def _get_audits_base(json_resp: dict) -> dict:
     """Gets the location of audits in the JSON response."""
     return json_resp["lighthouseResult"]["audits"]
+
+
+def _get_metrics_base(json_resp: dict) -> dict:
+    """Gets the location of metrics in the JSON response."""
+    return json_resp["loadingExperience"]["metrics"]
 
 
 def _get_timestamp(json_resp: dict) -> str:
@@ -152,7 +160,7 @@ def _get_timestamp(json_resp: dict) -> str:
 
     try:
         timestamp = json_resp["analysisUTCTimestamp"]
-    except JSONKeyError:
+    except KeyError:
         logger.warning("Unable to parse timestamp. Falling back to local time.")
         date = datetime.now().strftime(time_format)
         return date

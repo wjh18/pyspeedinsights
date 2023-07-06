@@ -22,8 +22,6 @@ def all_args():
         "desktop",
         "-f",
         "json",
-        "-m",
-        "all",
         "-l",
         "en",
         "-uc",

@@ -25,6 +25,7 @@ class ExcelWorkbook:
     worksheet: Workbook.worksheet_class = None
     cur_cell: list[int] = field(default_factory=list)
     category_scores: list[int] = field(default_factory=list)
+    metrics_scores: list[int | float] = field(default_factory=list)
 
     def set_up_worksheet(self) -> None:
         """Creates the workbook, adds a worksheet, and sets up column headings."""
@@ -41,13 +42,13 @@ class ExcelWorkbook:
         logger.info("Writing metadata to worksheet.")
         category = self.metadata["category"].upper()
         strategy = self.metadata["strategy"].upper()
-        metadata_value = f"{strategy} {category} REPORT"
+        metadata_value = f"{strategy} {category}"
         self.worksheet.write(row, col, metadata_value, metadata_format)
 
         # Add the URL heading with a wider column of merged cells.
         row += 2
-        col += 1
-        url_col_width = 3
+        # col += 1
+        url_col_width = 4
         self.worksheet.set_column(col, col, 15)
         self.worksheet.merge_range(
             row, col, row, col + url_col_width, "URL", column_format
@@ -67,15 +68,15 @@ class ExcelWorkbook:
 
         self._write_page_url()
         self._write_overall_category_score()
-        self._write_audit_results(self.audit_results, first_resp)
-        self._write_metrics_results(self.metrics_results, first_resp)
+        self._write_metrics_results(first_resp)
+        self._write_audit_results(first_resp)
 
         self.cur_cell[0] += 1  # Move down 1 row for next page's results
         self.cur_cell[1] = 5  # Reset to first results column
 
     def finalize_and_save(self) -> None:
         """Writes the average score to the worksheet and saves/closes it."""
-        self._write_average_score()
+        self._write_average_scores()
         self.workbook.close()
         logger.info("Workbook saved. Check your current directory!")
 
@@ -109,24 +110,29 @@ class ExcelWorkbook:
         # Add the score to a list so they can all be averaged at the end.
         self.category_scores.append(category_score)
 
-    def _write_average_score(self) -> None:
-        """Writes the average score next to the worksheet metadata."""
-        logger.info("Writing average score to worksheet.")
-        scores = self.category_scores
-        avg_score = sum(scores) / len(scores)
-        avg_score = round(avg_score, 2)
+    def _write_average_scores(self) -> None:
+        """Writes the average scores next to the worksheet metadata."""
+        logger.info("Writing average scores to worksheet.")
         format = self._metadata_format()
-        self.worksheet.write(0, 4, f"Avg Score: {avg_score}", format)
 
-    def _write_audit_results(
-        self, audit_results: AuditResults, first_resp: bool
-    ) -> None:
+        # Audits avg
+        cat_scores = self.category_scores
+        cat_score = self._avg_and_round_scores(cat_scores)
+        self.worksheet.write(0, 4, f"Cat. Score: {str(cat_score)}", format)
+
+        # Metrics avg
+        if self.metrics_scores:
+            m_scores = self.metrics_scores
+            avg_m_score = self._avg_and_round_scores(m_scores)
+            self.worksheet.write(0, 7, f"Metrics Avg: {str(avg_m_score)}", format)
+
+    def _write_audit_results(self, first_resp: bool) -> None:
         """Iterates through the audit results and writes them to the worksheet."""
         column_format = self._column_format()
         row, col = self.cur_cell
 
         logger.info("Writing audit results to worksheet.")
-        for title, scores in audit_results.items():
+        for title, scores in self.audit_results.items():
             self.worksheet.set_column(col, col + 1, 15)
             # cast() is a mypy workaround for issue #1178
             score, value = cast(tuple[Any, Any], scores)
@@ -140,27 +146,37 @@ class ExcelWorkbook:
             self.worksheet.write(row + 2, col + 1, value, score_format)
             col += 2
 
-        self.cur_cell[1] = col + 2
-
-    def _write_metrics_results(
-        self, metrics_results: MetricsResults, first_resp: bool
-    ) -> None:
+    def _write_metrics_results(self, first_resp: bool) -> None:
         """Iterates through the metrics results and writes them to the worksheet."""
         column_format = self._column_format()
-        data_format = self._data_format()
         row, col = self.cur_cell
 
-        if metrics_results is not None:
+        if self.metrics_results is not None:
             logger.info("Writing metrics results to worksheet.")
-            for title, score in metrics_results.items():
-                self.worksheet.set_column(col, col, 30)
+            ovr_score = 0
+            for title, score in self.metrics_results.items():
+                self.worksheet.set_column(col, col, 10)
                 if first_resp:
                     logger.debug("Writing metrics result headings to worksheet.")
                     self._write_results_headings(
                         row, col, title, column_format, result_type="metrics"
                     )
-                self.worksheet.write(row + 2, col, score, data_format)
+                score_format = self._score_format(score)
+                self.worksheet.write(row + 2, col, score, score_format)
+                ovr_score += score
                 col += 1
+
+            # For indiv. URL - will be averaged at the end
+            ovr_score = ovr_score / len(self.metrics_results)
+            ovr_score = round(ovr_score, 1)
+            self.metrics_scores.append(ovr_score)
+
+            self.cur_cell[1] = col + 2  # Don't overwrite metrics with audits
+
+        elif self.metrics_scores:
+            # No metrics results for this URL but previous URLs have written scores
+            # Needed for formatting reasons (set column to align with audit scores)
+            self.cur_cell[1] = 16
 
     def _write_results_headings(
         self, row: int, col: int, title: str, column_format: Format, result_type: str
@@ -172,7 +188,12 @@ class ExcelWorkbook:
             self.worksheet.write(row + 1, col + 1, "Value", column_format)
         elif result_type == "metrics":
             self.worksheet.write(row, col, title, column_format)
-            self.worksheet.write(row + 1, col, "Value", column_format)
+            self.worksheet.write(row + 1, col, "Score", column_format)
+
+    def _avg_and_round_scores(self, scores):
+        """Helper for averaging and rounding scores."""
+        scores = sum(scores) / len(scores)
+        return round(scores, 1)
 
     def _column_format(self) -> Format:
         """Reusable formatting for column cells."""
