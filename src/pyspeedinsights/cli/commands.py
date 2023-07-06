@@ -7,12 +7,14 @@ Typical usage example:
     arg_group_dict = arg_group_to_dict(arg_groups, "Group Name")
 """
 
+import logging
 from argparse import ArgumentParser, Namespace
 from typing import Any, TypeAlias, Union
 
 from .choices import COMMAND_CHOICES
 
 ArgGroups: TypeAlias = dict[str, Namespace]
+logger = logging.getLogger(__name__)
 
 
 def set_up_arg_parser() -> ArgumentParser:
@@ -23,6 +25,7 @@ def set_up_arg_parser() -> ArgumentParser:
     Returns:
         An argparse.ArgumentParser instance with 2 argument groups.
     """
+    logger.info("Setting up CLI arguments.")
     parser = ArgumentParser(prog="pyspeedinsights")
 
     # Add argument options for default API call query params.
@@ -122,6 +125,7 @@ def create_arg_groups(parser: ArgumentParser, args: Namespace) -> ArgGroups:
     Returns:
         A dict with group names as keys and argparse.Namespace instances as values.
     """
+    logger.info("Creating CLI argument groups.")
     arg_groups = {}
     for group in parser._action_groups:
         group_dict = {a.dest: getattr(args, a.dest, None) for a in group._group_actions}

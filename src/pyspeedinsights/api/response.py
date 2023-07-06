@@ -2,11 +2,15 @@
 
 import copy
 import json
+import logging
 from datetime import datetime
 from typing import Optional, Union
 
 from ..cli.choices import COMMAND_CHOICES
+from ..utils.exceptions import JSONKeyError
 from ..utils.generic import sort_dict_alpha
+
+logger = logging.getLogger(__name__)
 
 
 def process_json(json_resp: dict, category: str, strategy: str) -> None:
@@ -20,7 +24,7 @@ def process_json(json_resp: dict, category: str, strategy: str) -> None:
 
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(json_resp, f, ensure_ascii=False, indent=4)
-        print("JSON processed. Check your current directory.")
+        logger.info("JSON processed. Check your current working directory.")
 
 
 def process_excel(
@@ -31,12 +35,23 @@ def process_excel(
     Called within main() in pyspeedinsights.app.
     Metrics results are only included if the category is performance.
     """
-    audits_base = _get_audits_base(json_resp)  # Location of audits in json response
-    metadata = _parse_metadata(json_resp, category)
-    audit_results = _parse_audits(audits_base)
+    json_err = "Malformed JSON response. Skipping Excel processing for URL: "
+    try:
+        audits_base = _get_audits_base(json_resp)  # Location of audits in json response
+        metadata = _parse_metadata(json_resp, category)
+        audit_results = _parse_audits(audits_base)
+    except JSONKeyError as err:
+        logger.error(f"{json_err}{err}", exc_info=True)
+        return {}
+
     if metrics is not None and category == "performance":
-        metrics_results = _parse_metrics(audits_base, metrics)
+        try:
+            metrics_results = _parse_metrics(audits_base, metrics)
+        except JSONKeyError as err:
+            logger.error(f"{json_err}{err}", exc_info=True)
+            return {}
     else:
+        logger.warning("Skipping metrics (not chosen or non-performance category)")
         metrics_results = None
 
     results: dict[str, Union[dict, None]] = {
@@ -44,11 +59,14 @@ def process_excel(
         "audit_results": audit_results,
         "metrics_results": metrics_results,
     }
+    logger.info("Response data processed for URL.")
     return results
 
 
 def _parse_metadata(json_resp: dict, category: str) -> dict[str, Union[str, int]]:
     """Parses various metadata from the JSON response to write to Excel."""
+    logger.info("Parsing metadata from JSON response.")
+
     json_base = json_resp["lighthouseResult"]
     strategy = json_base["configSettings"]["formFactor"]
     category_score = json_base["categories"][category]["score"]
@@ -72,6 +90,8 @@ def _parse_audits(audits_base: dict) -> dict[str, tuple[Union[int, float]]]:
         A dict of audit results with audit names as keys and tuples of length 2
         as values containing the audit scores and numeric values, respectively.
     """
+    logger.info("Parsing audit data from JSON response.")
+
     audit_results = {}
     # Create results dict with scores and numerical values for each audit.
     for k in audits_base.keys():
@@ -97,11 +117,13 @@ def _parse_metrics(
         and int or float metrics as values.
     """
     if "all" in metrics:
+        logger.info("Parsing all metrics.")
         metrics_to_use = copy.copy(COMMAND_CHOICES["metrics"])
         # Remove 'all' to avoid key errors, as it doesn't exist in JSON resp.
         if type(metrics_to_use) == list:
             metrics_to_use.remove("all")
     else:
+        logger.info("Parsing chosen metrics.")
         metrics_to_use = metrics
 
     # Create new dict of metrics based on user's chosen metrics.
@@ -125,10 +147,19 @@ def _get_timestamp(json_resp: dict) -> str:
     Returns:
         A str in format year-month-day_hour.minute.second.
     """
-    timestamp = json_resp["analysisUTCTimestamp"]
+    logger.info("Parsing timestamp from JSON response.")
+    time_format = "%Y-%m-%d_%H.%M.%S"
+
+    try:
+        timestamp = json_resp["analysisUTCTimestamp"]
+    except JSONKeyError:
+        logger.warning("Unable to parse timestamp. Falling back to local time.")
+        date = datetime.now().strftime(time_format)
+        return date
+
     ts_no_fractions = timestamp.split(".")[0]  # Remove fraction
     if ts_no_fractions[-1] != "Z":
         ts_no_fractions += "Z"  # Add Z back after fraction removal
     dt_object = datetime.strptime(ts_no_fractions, "%Y-%m-%dT%H:%M:%SZ")
-    date = dt_object.strftime("%Y-%m-%d_%H.%M.%S")
+    date = dt_object.strftime(time_format)
     return date

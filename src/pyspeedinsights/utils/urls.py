@@ -1,6 +1,13 @@
 """Utilities for URL processing."""
 
+import logging
 from urllib.parse import urlsplit
+
+logger = logging.getLogger(__name__)
+
+
+class InvalidURLError(Exception):
+    """A base exception for an invalid URL format."""
 
 
 def validate_url(url: str) -> str:
@@ -14,10 +21,12 @@ def validate_url(url: str) -> str:
     Returns:
         The sanitized URL as a str.
     Raises:
-        SystemExit: The user entered a URL without a path that has no domain
+        InvalidURLError: The user entered a URL without a path that has no domain
         or a URL whose path precedes the hostname (e.g. path/example.com).
     """
+    logger.info("Checking if request URL is a valid URL.")
     err = "Invalid URL. Please enter a valid fully-qualified URL."
+
     replacements = {}
     u = urlsplit(url)
 
@@ -28,10 +37,13 @@ def validate_url(url: str) -> str:
         path_before_host = p_sep < dot and p_sep > 0
         no_host = "." not in u.path
         if path_before_host or no_host:
-            raise SystemExit(err)
+            raise InvalidURLError(err)  # Logged as CRITICAL in main()
         else:
             replacements["netloc"] = u.path
             replacements["path"] = ""
+    elif "." not in u.netloc:
+        # URLs with schemes but no TLD
+        raise InvalidURLError(err)  # Logged as CRITICAL in main()
 
     replacements["fragment"] = ""
     replacements["query"] = ""

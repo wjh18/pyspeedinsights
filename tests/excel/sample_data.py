@@ -42,7 +42,6 @@ metrics_results = {
     "observedSpeedIndexTs": 349111765971,
     "observedTimeOrigin": 0,
     "observedTimeOriginTs": 349111281936,
-    "observedTotalCumulativeLayoutShift": 0,
     "observedTraceEnd": 3392,
     "observedTraceEndTs": 349114673907,
     "speedIndex": 2610,

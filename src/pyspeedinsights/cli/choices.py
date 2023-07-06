@@ -55,7 +55,6 @@ COMMAND_CHOICES = {
     # This must be a list instead of tuple so "all" can be removed from it
     "metrics": [
         "all",
-        "observedTotalCumulativeLayoutShift",
         "observedCumulativeLayoutShift",
         "observedLargestContentfulPaintAllFrames",
         "maxPotentialFID",

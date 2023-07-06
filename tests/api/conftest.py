@@ -45,7 +45,6 @@ def all_metrics():
         "firstMeaningfulPaint": 235,
         "observedNavigationStart": 0,
         "firstContentfulPaint": 235,
-        "observedTotalCumulativeLayoutShift": 0,
         "observedSpeedIndex": 111,
         "observedNavigationStartTs": 6367780284457,
         "observedLargestContentfulPaint": 115,

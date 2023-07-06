@@ -26,3 +26,4 @@ build/
 # Package specific
 psi*.json
 psi*.xlsx
+psi.log

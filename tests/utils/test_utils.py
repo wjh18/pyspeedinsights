@@ -5,24 +5,27 @@ from pyspeedinsights.utils.generic import (
     remove_nonetype_dict_items,
     sort_dict_alpha,
 )
-from pyspeedinsights.utils.urls import validate_url
+from pyspeedinsights.utils.urls import InvalidURLError, validate_url
 
 
 class TestValidateUrl:
     """Tests validation of URLs."""
 
-    def raises_system_exit(self, url):
-        with pytest.raises(SystemExit):
+    def raises_invalid_url(self, url):
+        with pytest.raises(InvalidURLError):
             validate_url(url)
 
     def test_url_without_tld_exits(self):
-        self.raises_system_exit("badurl")
+        self.raises_invalid_url("badurl")
+
+    def test_url_without_tld_with_scheme_exits(self):
+        self.raises_invalid_url("https://badurl")
 
     def test_url_without_tld_with_path_exits(self):
-        self.raises_system_exit("badurl/path")
+        self.raises_invalid_url("badurl/path")
 
     def test_url_with_path_and_extension_without_tld_exits(self):
-        self.raises_system_exit("badurl/path.html")
+        self.raises_invalid_url("badurl/path.html")
 
     def test_valid_urls_are_not_modified(self):
         urls = [

@@ -214,7 +214,6 @@ Example:
 
 Full list of available metrics:
 
-* `observedTotalCumulativeLayoutShift`
 * `observedCumulativeLayoutShift`
 * `observedLargestContentfulPaintAllFrames`
 * `maxPotentialFID`
