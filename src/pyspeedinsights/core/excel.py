@@ -67,8 +67,8 @@ class ExcelWorkbook:
 
         self._write_page_url()
         self._write_overall_category_score()
-        self._write_audit_results(self.audit_results, first_resp)
-        self._write_metrics_results(self.metrics_results, first_resp)
+        self._write_metrics_results(first_resp)
+        self._write_audit_results(first_resp)
 
         self.cur_cell[0] += 1  # Move down 1 row for next page's results
         self.cur_cell[1] = 5  # Reset to first results column
@@ -118,15 +118,13 @@ class ExcelWorkbook:
         format = self._metadata_format()
         self.worksheet.write(0, 4, f"Avg Score: {avg_score}", format)
 
-    def _write_audit_results(
-        self, audit_results: AuditResults, first_resp: bool
-    ) -> None:
+    def _write_audit_results(self, first_resp: bool) -> None:
         """Iterates through the audit results and writes them to the worksheet."""
         column_format = self._column_format()
         row, col = self.cur_cell
 
         logger.info("Writing audit results to worksheet.")
-        for title, scores in audit_results.items():
+        for title, scores in self.audit_results.items():
             self.worksheet.set_column(col, col + 1, 15)
             # cast() is a mypy workaround for issue #1178
             score, value = cast(tuple[Any, Any], scores)
@@ -140,19 +138,15 @@ class ExcelWorkbook:
             self.worksheet.write(row + 2, col + 1, value, score_format)
             col += 2
 
-        self.cur_cell[1] = col + 2
-
-    def _write_metrics_results(
-        self, metrics_results: MetricsResults, first_resp: bool
-    ) -> None:
+    def _write_metrics_results(self, first_resp: bool) -> None:
         """Iterates through the metrics results and writes them to the worksheet."""
         column_format = self._column_format()
         data_format = self._data_format()
         row, col = self.cur_cell
 
-        if metrics_results is not None:
+        if self.metrics_results is not None:
             logger.info("Writing metrics results to worksheet.")
-            for title, score in metrics_results.items():
+            for title, score in self.metrics_results.items():
                 self.worksheet.set_column(col, col, 30)
                 if first_resp:
                     logger.debug("Writing metrics result headings to worksheet.")
@@ -161,6 +155,8 @@ class ExcelWorkbook:
                     )
                 self.worksheet.write(row + 2, col, score, data_format)
                 col += 1
+
+            self.cur_cell[1] = col + 2  # Don't overwrite metrics with audits
 
     def _write_results_headings(
         self, row: int, col: int, title: str, column_format: Format, result_type: str
@@ -172,7 +168,7 @@ class ExcelWorkbook:
             self.worksheet.write(row + 1, col + 1, "Value", column_format)
         elif result_type == "metrics":
             self.worksheet.write(row, col, title, column_format)
-            self.worksheet.write(row + 1, col, "Value", column_format)
+            self.worksheet.write(row + 1, col, "Score", column_format)
 
     def _column_format(self) -> Format:
         """Reusable formatting for column cells."""

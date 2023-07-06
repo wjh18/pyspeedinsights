@@ -14,7 +14,6 @@ from .core.sitemap import (
     request_sitemap,
     validate_sitemap_url,
 )
-from .utils.exceptions import JSONKeyError
 from .utils.generic import remove_dupes_from_list
 from .utils.urls import InvalidURLError
 
@@ -45,7 +44,6 @@ def main() -> None:
     logger.info("Parsing CLI arguments.")
 
     format = proc_args_dict.get("format")
-    metrics = proc_args_dict.get("metrics")
 
     url = api_args_dict.get("url")
     category = api_args_dict.get("category")
@@ -57,12 +55,6 @@ def main() -> None:
 
     json_output = format == "json" or format is None
     excel_output = format in ("excel", "sitemap")
-
-    if metrics is not None and json_output or category != "performance":
-        logger.warning(
-            "Metrics are only configurable for excel performance reports. "
-            "JSON performance reports will include all metrics by default."
-        )
 
     if format == "sitemap" and url is not None:
         try:
@@ -102,11 +94,11 @@ def main() -> None:
             logger.info("JSON format selected. Processing JSON.")
             process_json(response, category, strategy)
         elif excel_output:
-            excel_results = process_excel(response, category, metrics)
+            excel_results = process_excel(response, category)
 
             try:
                 final_url = response["lighthouseResult"]["finalUrl"]
-            except JSONKeyError as err:
+            except KeyError as err:
                 # For now, log this as critical and exit.
                 # A better solution would be to preserve the original request URL
                 # as a fallback. Temporarily, this is more helpful than just KeyError.
