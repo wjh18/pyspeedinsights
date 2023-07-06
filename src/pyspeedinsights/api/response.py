@@ -9,6 +9,16 @@ from ..utils.generic import sort_dict_alpha
 
 logger = logging.getLogger(__name__)
 
+METRICS_ABBR = {
+    "CUMULATIVE_LAYOUT_SHIFT_SCORE": "CLS",
+    "EXPERIMENTAL_INTERACTION_TO_NEXT_PAINT": "INP(E)",
+    "EXPERIMENTAL_TIME_TO_FIRST_BYTE": "TTFB(E)",
+    "FIRST_CONTENTFUL_PAINT_MS": "FCP",
+    "FIRST_INPUT_DELAY_MS": "FID",
+    "INTERACTION_TO_NEXT_PAINT": "INP",
+    "LARGEST_CONTENTFUL_PAINT_MS": "LCP",
+}
+
 
 def process_json(json_resp: dict, category: str, strategy: str) -> None:
     """Dumps raw json response to a file in the working directory.
@@ -115,11 +125,16 @@ def _parse_metrics(metrics_base: dict) -> dict[str, Union[int, float]]:
     logger.info("Parsing metrics data from JSON response.")
     metrics_results = {}
     for metric, result in metrics_base.items():
+        try:
+            abbr = METRICS_ABBR[metric]
+        except KeyError:
+            abbr = metric
         score = result["distributions"][0]["proportion"]
         score = round(score, 3) * 100
-        metrics_results[metric] = score
+        metrics_results[abbr] = score
     # Ensure each metric is written to Excel under the same column.
-    return sort_dict_alpha(metrics_results)
+    desired_order_list = ("CLS", "FCP", "LCP", "FID", "INP", "INP(E)", "TTFB(E)")
+    return {k: metrics_results[k] for k in desired_order_list}
 
 
 def _get_audits_base(json_resp: dict) -> dict:

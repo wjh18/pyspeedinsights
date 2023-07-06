@@ -41,13 +41,13 @@ class ExcelWorkbook:
         logger.info("Writing metadata to worksheet.")
         category = self.metadata["category"].upper()
         strategy = self.metadata["strategy"].upper()
-        metadata_value = f"{strategy} {category} REPORT"
+        metadata_value = f"{strategy} {category}"
         self.worksheet.write(row, col, metadata_value, metadata_format)
 
         # Add the URL heading with a wider column of merged cells.
         row += 2
-        col += 1
-        url_col_width = 3
+        # col += 1
+        url_col_width = 4
         self.worksheet.set_column(col, col, 15)
         self.worksheet.merge_range(
             row, col, row, col + url_col_width, "URL", column_format
