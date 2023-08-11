@@ -1,5 +1,7 @@
 # pyspeedinsights
 
+**Warning: Archived on 08/11/2023 due to lack of interest. Please consider alternatives such as [Unlighthouse](https://unlighthouse.dev/).**
+
 Measure your site speed, performance, accessibility and SEO in bulk from the command line with Python and the PageSpeed Insights API.
 
 Support for sitemap parsing and asynchronous requests with aiohttp. Outputs to JSON or a color-coded Excel sheet for further analysis.
